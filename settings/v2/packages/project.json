@@ -1,0 +1,31 @@
+{
+  "__version__": "1.0.6",
+  "general": {
+    "designResolution": {
+      "width": 750,
+      "height": 1624
+    }
+  },
+  "layer": [
+    {
+      "name": "Scene",
+      "value": 1
+    },
+    {
+      "name": "UI",
+      "value": 2
+    },
+    {
+      "name": "Interact",
+      "value": 4
+    },
+    {
+      "name": "Guide",
+      "value": 8
+    },
+    {
+      "name": "Effect",
+      "value": 16
+    }
+  ]
+}
