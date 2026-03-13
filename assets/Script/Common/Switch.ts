@@ -19,6 +19,12 @@ export class Switch extends Component {
     @property({ tooltip: '默认是否开启' })
     isOn = true;
 
+    @property({ type: Node, tooltip: '开启时显示的节点' })
+    onNode: Node | null = null;
+
+    @property({ type: Node, tooltip: '关闭时显示的节点' })
+    offNode: Node | null = null;
+
     @property({ type: [EventHandler], tooltip: '状态变化回调' })
     onChanged: EventHandler[] = [];
 
@@ -60,5 +66,8 @@ export class Switch extends Component {
         } else {
             this.ball.setPosition(targetX, pos.y, pos.z);
         }
+
+        if (this.onNode) this.onNode.active = this.isOn;
+        if (this.offNode) this.offNode.active = !this.isOn;
     }
 }

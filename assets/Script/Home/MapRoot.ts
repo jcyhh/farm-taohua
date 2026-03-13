@@ -1,5 +1,5 @@
-import { _decorator, Component, EventTouch, Node, UITransform, Vec2, AudioSource } from 'cc';
-import { Storage } from '../Utils/Storage';
+import { _decorator, Component, EventTouch, Node, UITransform, Vec2 } from 'cc';
+import { Land } from '../Prefab/Land';
 
 const { ccclass, property } = _decorator;
 
@@ -8,12 +8,12 @@ export class MapRoot extends Component {
     @property
     private maxScale = 2;
 
-    private bgmSource: AudioSource | null = null;
     private parentTransform: UITransform | null = null;
     private selfTransform: UITransform | null = null;
     private minScale = 1;
     private pinchStartDistance = 0;
     private pinchStartScale = 1;
+    private _touchStartPos = new Vec2();
 
     onLoad() {
         this.parentTransform = this.node.parent?.getComponent(UITransform) ?? null;
@@ -25,9 +25,6 @@ export class MapRoot extends Component {
         this.node.on(Node.EventType.TOUCH_END, this.onTouchEnd, this);
         this.node.on(Node.EventType.TOUCH_CANCEL, this.onTouchEnd, this);
         this.clampPosition();
-
-        this.bgmSource = this.node.getComponent(AudioSource);
-        this.initBgm();
     }
 
     onDestroy() {
@@ -38,6 +35,7 @@ export class MapRoot extends Component {
     }
 
     private onTouchStart(event: EventTouch) {
+        this._touchStartPos.set(event.getUILocation());
         const touches = event.getTouches();
         if (touches.length >= 2) {
             this.pinchStartDistance = this.getTouchDistance(touches[0].getUILocation(), touches[1].getUILocation());
@@ -65,6 +63,16 @@ export class MapRoot extends Component {
         if (touches.length < 2) {
             this.pinchStartDistance = 0;
             this.pinchStartScale = this.node.scale.x;
+
+            const endPos = event.getUILocation();
+            if (Vec2.distance(this._touchStartPos, endPos) < 10) {
+                const before = Land.currentSelected;
+                this.scheduleOnce(() => {
+                    if (Land.currentSelected === before) {
+                        Land.deselectCurrent();
+                    }
+                }, 0);
+            }
         }
     }
 
@@ -138,16 +146,4 @@ export class MapRoot extends Component {
     private getTouchDistance(firstTouch: Vec2, secondTouch: Vec2) {
         return Vec2.distance(firstTouch, secondTouch);
     }
-
-    private initBgm() {
-        if (!this.bgmSource) return;
-
-        const isOn = Storage.getBool('bgmOn', true);
-        if (!isOn) {
-            this.scheduleOnce(() => {
-                this.bgmSource?.stop();
-            }, 0);
-        }
-    }
 }
-

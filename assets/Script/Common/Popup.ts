@@ -1,4 +1,6 @@
 import { _decorator, Component, Node, tween, Vec3 } from 'cc';
+import { AudioManager } from '../Manager/AudioManager';
+
 const { ccclass, property } = _decorator;
 
 @ccclass('Popup')
@@ -21,10 +23,21 @@ export class Popup extends Component {
     @property({ tooltip: '点击遮罩是否关闭弹窗' })
     closeOnMaskClick = true;
 
+    @property({ type: Node, tooltip: '父级弹窗节点(二级弹窗时设置)' })
+    parentPopupNode: Node | null = null;
+
     private isTweening = false;
+
+    private get parentPopup(): Popup | null {
+        return this.parentPopupNode?.getComponent(Popup) ?? null;
+    }
 
     open() {
         if (!this.content || this.isTweening) return;
+
+        if (this.parentPopup?.mask) {
+            this.parentPopup.mask.active = false;
+        }
 
         this.isTweening = true;
         this.node.active = true;
@@ -51,6 +64,7 @@ export class Popup extends Component {
     close() {
         if (!this.content || this.isTweening) return;
 
+        AudioManager.instance?.playClick();
         this.isTweening = true;
         tween(this.content).stop();
         this.content.setScale(1, 1, 1);
@@ -63,8 +77,11 @@ export class Popup extends Component {
                 if (this.mask) this.mask.active = false;
                 this.node.active = false;
                 this.isTweening = false;
+
+                if (this.parentPopup?.mask) {
+                    this.parentPopup.mask.active = true;
+                }
             })
             .start();
     }
 }
-

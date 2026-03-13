@@ -1,11 +1,12 @@
-import { _decorator, Component, Node, EventTouch, tween, Vec3, AudioClip, AudioSource } from 'cc';
+import { _decorator, Component, Node, tween, Vec3 } from 'cc';
+import { AudioManager } from '../Manager/AudioManager';
 
 const { ccclass, property } = _decorator;
 
 @ccclass('ButtonClick')
 export class ButtonClick extends Component {
-    @property({ type: AudioClip, tooltip: '点击音效' })
-    clickSound: AudioClip | null = null;
+    @property({ tooltip: '是否启用点击动画' })
+    enableAnim = true;
 
     @property({ tooltip: '缩小比例' })
     scaleDown = 0.85;
@@ -15,9 +16,6 @@ export class ButtonClick extends Component {
 
     @property({ tooltip: '回弹时长(秒)' })
     upDuration = 0.12;
-
-    @property({ tooltip: '音量 0~1' })
-    volume = 1.0;
 
     private originScale = new Vec3();
     private isTweening = false;
@@ -35,12 +33,16 @@ export class ButtonClick extends Component {
 
     private onClickUp() {
         if (this.isTweening) return;
-        this.playClickAnim();
-        this.playClickSound();
+        if (this.enableAnim) {
+            this.playClickAnim();
+        }
+        AudioManager.instance?.playClick();
     }
 
     private onClickCancel() {
-        this.resetScale();
+        if (this.enableAnim) {
+            this.resetScale();
+        }
     }
 
     private playClickAnim() {
@@ -56,18 +58,6 @@ export class ButtonClick extends Component {
             .to(this.upDuration, { scale: this.originScale })
             .call(() => { this.isTweening = false; })
             .start();
-    }
-
-    private playClickSound() {
-        if (!this.clickSound) return;
-
-        let audioSource = this.node.getComponent(AudioSource);
-        if (!audioSource) {
-            audioSource = this.node.addComponent(AudioSource);
-        }
-        audioSource.clip = this.clickSound;
-        audioSource.volume = this.volume;
-        audioSource.playOneShot(this.clickSound, this.volume);
     }
 
     private resetScale() {

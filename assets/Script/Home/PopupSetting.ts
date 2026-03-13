@@ -1,36 +1,35 @@
-import { _decorator, Component, AudioSource } from 'cc';
-import { Storage } from '../Utils/Storage';
+import { _decorator, Component } from 'cc';
 import { Switch } from '../Common/Switch';
+import { AudioManager } from '../Manager/AudioManager';
 
 const { ccclass, property } = _decorator;
 
-const STORAGE_KEY = 'bgmOn';
-
 @ccclass('PopupSetting')
 export class PopupSetting extends Component {
-    @property({ type: AudioSource, tooltip: '背景音乐 AudioSource' })
-    bgmSource: AudioSource | null = null;
-
     @property({ type: Switch, tooltip: '背景音乐开关' })
     bgmSwitch: Switch | null = null;
 
+    @property({ type: Switch, tooltip: '音效开关' })
+    sfxSwitch: Switch | null = null;
+
     onEnable() {
-        const isOn = Storage.getBool(STORAGE_KEY, true);
-        if (this.bgmSwitch) {
-            this.bgmSwitch.setState(isOn);
+        const mgr = AudioManager.instance;
+        if (this.bgmSwitch && mgr) {
+            this.bgmSwitch.setState(mgr.isBgmOn);
+        }
+        if (this.sfxSwitch && mgr) {
+            this.sfxSwitch.setState(mgr.isSfxOn);
         }
     }
 
     onBgmSwitchChanged(isOn: boolean) {
-        Storage.setBool(STORAGE_KEY, isOn);
+        AudioManager.instance?.setBgmOn(isOn);
+    }
 
-        if (!this.bgmSource) return;
-
+    onSfxSwitchChanged(isOn: boolean) {
+        AudioManager.instance?.setSfxOn(isOn);
         if (isOn) {
-            this.bgmSource.stop();
-            this.bgmSource.play();
-        } else {
-            this.bgmSource.stop();
+            AudioManager.instance?.playClick();
         }
     }
 }
