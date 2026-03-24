@@ -626,7 +626,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "day",
+    "_name": "count",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -868,6 +868,7 @@
       "__id__": 0
     },
     "fileId": "61yKBhlPJFxJDrrRBemTwG",
+    "instance": null,
     "targetOverrides": null
   }
 ]

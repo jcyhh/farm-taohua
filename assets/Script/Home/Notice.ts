@@ -1,4 +1,5 @@
 import { _decorator, Component, Node, Label, UITransform, tween, Vec3 } from 'cc';
+import { Api, NoticeItem } from '../Config/Api';
 
 const { ccclass, property } = _decorator;
 
@@ -26,16 +27,22 @@ export class Notice extends Component {
     loopDelay = 1.0;
 
     private marqueeRunning = false;
+    private label: Label | null = null;
 
     onLoad() {
         const pos = this.node.position;
         this.node.setPosition(this.hideRightX, pos.y, pos.z);
+        this.label = this.labelNode?.getComponent(Label) ?? null;
     }
 
-    start() {
-        this.scheduleOnce(() => {
-            this.show();
-        }, 3);
+    async start() {
+        const hasNotice = await this.loadNotice();
+        if (!hasNotice) {
+            this.node.active = false;
+            return;
+        }
+        this.node.active = true;
+        this.show();
     }
 
     show() {
@@ -100,5 +107,51 @@ export class Notice extends Component {
                 this.runMarqueeLoop();
             })
             .start();
+    }
+
+    private async loadNotice(): Promise<boolean> {
+        try {
+            const response = await Api.notices();
+            const firstNotice = this.pickFirstNotice(response);
+            const title = firstNotice?.title?.trim() ?? '';
+
+            if (!title) {
+                return false;
+            }
+
+            if (this.label) {
+                this.label.string = title;
+            }
+            return true;
+        } catch (error) {
+            console.error('[Notice] 获取公告失败:', error);
+            return false;
+        }
+    }
+
+    private pickFirstNotice(
+        response: NoticeItem[] | { notices?: NoticeItem[]; list?: NoticeItem[]; data?: NoticeItem[] | { list?: NoticeItem[] } },
+    ): NoticeItem | null {
+        if (Array.isArray(response)) {
+            return response[0] ?? null;
+        }
+
+        if (Array.isArray(response.notices)) {
+            return response.notices[0] ?? null;
+        }
+
+        if (Array.isArray(response.data)) {
+            return response.data[0] ?? null;
+        }
+
+        if (Array.isArray(response.list)) {
+            return response.list[0] ?? null;
+        }
+
+        if (response.data && Array.isArray(response.data.list)) {
+            return response.data.list[0] ?? null;
+        }
+
+        return null;
     }
 }

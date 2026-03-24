@@ -11,6 +11,9 @@ export class AudioManager extends Component {
     @property({ type: AudioClip, tooltip: '点击音效' })
     clickClip: AudioClip | null = null;
 
+    @property({ type: AudioClip, tooltip: '金币音效' })
+    goldClip: AudioClip | null = null;
+
     @property({ type: AudioSource, tooltip: '背景音乐 AudioSource(Play On Awake)' })
     bgmSource: AudioSource | null = null;
 
@@ -53,6 +56,10 @@ export class AudioManager extends Component {
 
     playClick() {
         this.playSfx(this.clickClip);
+    }
+
+    playGold() {
+        this.playSfx(this.goldClip);
     }
 
     playSfx(clip: AudioClip | null) {

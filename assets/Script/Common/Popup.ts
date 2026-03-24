@@ -44,7 +44,11 @@ export class Popup extends Component {
         if (this.mask) {
             this.mask.active = true;
             if (this.closeOnMaskClick) {
-                this.mask.once(Node.EventType.TOUCH_END, this.close, this);
+                this.scheduleOnce(() => {
+                    if (this.mask?.isValid && this.node.active) {
+                        this.mask.once(Node.EventType.TOUCH_END, this.close, this);
+                    }
+                }, 0);
             }
         }
         this.content.active = true;

@@ -1,4 +1,5 @@
 import { _decorator, Component, Node, Sprite, SpriteFrame, Enum, tween, Vec3, UITransform, log, EventTouch } from 'cc';
+import { Backpack } from '../Home/Backpack';
 
 const { ccclass, property } = _decorator;
 
@@ -12,6 +13,10 @@ enum LandState {
 Enum(LandState);
 
 const _localPos = new Vec3();
+const RIGHT_DOWN_OUTSIDE_LANDS = new Set(['land1', 'land2', 'land3']);
+const LEFT_DOWN_OUTSIDE_LANDS = new Set(['land3', 'land6', 'land9', 'land10']);
+const RIGHT_UP_OUTSIDE_LANDS = new Set(['land1', 'land4', 'land7', 'land10']);
+const LEFT_UP_OUTSIDE_LANDS = new Set(['land7', 'land8', 'land10']);
 
 @ccclass('Land')
 export class Land extends Component {
@@ -71,19 +76,23 @@ export class Land extends Component {
 
     select() {
         if (Land._currentSelected && Land._currentSelected !== this) {
-            Land._currentSelected.deselect();
+            Land._currentSelected.deselect(false);
         }
         this._selected = true;
         Land._currentSelected = this;
         if (this.selectNode) this.selectNode.active = true;
+        Backpack.instance?.show();
     }
 
-    deselect() {
+    deselect(shouldHideBackpack: boolean = true) {
         this._selected = false;
         if (Land._currentSelected === this) {
             Land._currentSelected = null;
         }
         if (this.selectNode) this.selectNode.active = false;
+        if (shouldHideBackpack && !Land._currentSelected) {
+            Backpack.instance?.hide();
+        }
     }
 
     hitDiamond(worldPos: Vec3): boolean {
@@ -178,6 +187,11 @@ export class Land extends Component {
             return;
         }
 
+        if (this.shouldDeselectOnOutsideCorner(worldPos)) {
+            Land.deselectCurrent();
+            return;
+        }
+
         const siblings = this.node.parent?.children;
         if (!siblings) return;
         for (let i = siblings.length - 1; i >= 0; i--) {
@@ -193,6 +207,32 @@ export class Land extends Component {
     onLandClick() {
         log(`点击了: ${this.node.name}`);
         this.select();
+    }
+
+    private shouldDeselectOnOutsideCorner(worldPos: Vec3): boolean {
+        if (!this._landUT) return false;
+
+        this._landUT.convertToNodeSpaceAR(worldPos, _localPos);
+        const isRight = _localPos.x > 0;
+        const isLeft = _localPos.x < 0;
+        const isUp = _localPos.y > 0;
+        const isDown = _localPos.y < 0;
+        const landName = this.node.name;
+
+        if (isRight && isDown && RIGHT_DOWN_OUTSIDE_LANDS.has(landName)) {
+            return true;
+        }
+        if (isLeft && isDown && LEFT_DOWN_OUTSIDE_LANDS.has(landName)) {
+            return true;
+        }
+        if (isRight && isUp && RIGHT_UP_OUTSIDE_LANDS.has(landName)) {
+            return true;
+        }
+        if (isLeft && isUp && LEFT_UP_OUTSIDE_LANDS.has(landName)) {
+            return true;
+        }
+
+        return false;
     }
 }
 

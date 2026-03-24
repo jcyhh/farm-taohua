@@ -299,7 +299,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "number1",
+    "_name": "number",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -356,7 +356,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Label",
+    "_name": "count",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -878,6 +878,7 @@
       "__id__": 0
     },
     "fileId": "23I3OchSBPObvoEONLBQGB",
+    "instance": null,
     "targetOverrides": null
   }
 ]
