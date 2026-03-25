@@ -14,6 +14,12 @@ export class AudioManager extends Component {
     @property({ type: AudioClip, tooltip: '金币音效' })
     goldClip: AudioClip | null = null;
 
+    @property({ type: AudioClip, tooltip: '浇水音效' })
+    waterClip: AudioClip | null = null;
+
+    @property({ type: AudioClip, tooltip: '果实音效' })
+    fruitClip: AudioClip | null = null;
+
     @property({ type: AudioSource, tooltip: '背景音乐 AudioSource(Play On Awake)' })
     bgmSource: AudioSource | null = null;
 
@@ -60,6 +66,14 @@ export class AudioManager extends Component {
 
     playGold() {
         this.playSfx(this.goldClip);
+    }
+
+    playWater() {
+        this.playSfx(this.waterClip);
+    }
+
+    playFruit() {
+        this.playSfx(this.fruitClip);
     }
 
     playSfx(clip: AudioClip | null) {

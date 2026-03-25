@@ -8,7 +8,7 @@ import { UiHeadbar } from './UiHeadbar';
 
 const { ccclass, property } = _decorator;
 
-type PayType = 'token' | 'stone';
+type PayType = 'token' | 'stone' | 'usdt';
 
 @ccclass('PopupBuy')
 export class PopupBuy extends Component {
@@ -23,15 +23,18 @@ export class PopupBuy extends Component {
     private unitPrice = 0;
     private radioToken: Node | null = null;
     private radioStone: Node | null = null;
+    private radioUsdt: Node | null = null;
     private selectedPayType: PayType = 'stone';
     private radioClickNodes: Node[] = [];
 
     onLoad() {
         this.radioToken = this.node.getChildByPath('content/radioBg/token');
         this.radioStone = this.node.getChildByPath('content/radioBg/stone');
+        this.radioUsdt = this.node.getChildByPath('content/radioBg/usdt');
 
         this.bindRadioNode(this.radioToken, this.onSelectToken);
         this.bindRadioNode(this.radioStone, this.onSelectStone);
+        this.bindRadioNode(this.radioUsdt, this.onSelectUsdt);
         this.updateRadioState();
     }
 
@@ -54,6 +57,7 @@ export class PopupBuy extends Component {
     onDestroy() {
         this.unbindRadioNode(this.radioToken, this.onSelectToken);
         this.unbindRadioNode(this.radioStone, this.onSelectStone);
+        this.unbindRadioNode(this.radioUsdt, this.onSelectUsdt);
     }
 
     onCountChanged() {
@@ -72,7 +76,11 @@ export class PopupBuy extends Component {
         const payload: BuySeedParams = {
             seed_id: this.seedId,
             buy_num: quantity,
-            pay_ccy: this.selectedPayType === 'token' ? 'balance_xz' : 'balance_fairy_stone',
+            pay_ccy: this.selectedPayType === 'token'
+                ? 'balance_xz'
+                : this.selectedPayType === 'usdt'
+                    ? 'balance_usdt'
+                    : 'balance_fairy_stone',
         };
 
         try {
@@ -98,6 +106,12 @@ export class PopupBuy extends Component {
         AudioManager.instance?.playClick();
     }
 
+    private onSelectUsdt() {
+        this.selectedPayType = 'usdt';
+        this.updateRadioState();
+        AudioManager.instance?.playClick();
+    }
+
     private refreshText() {
         if (!this.tipText) return;
         const total = this.unitPrice * (this.count?.value ?? 1);
@@ -108,6 +122,7 @@ export class PopupBuy extends Component {
     private updateRadioState() {
         this.setRadioNodeState(this.radioToken, this.selectedPayType === 'token');
         this.setRadioNodeState(this.radioStone, this.selectedPayType === 'stone');
+        this.setRadioNodeState(this.radioUsdt, this.selectedPayType === 'usdt');
     }
 
     private setRadioNodeState(target: Node | null, selected: boolean) {

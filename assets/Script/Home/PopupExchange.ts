@@ -111,14 +111,11 @@ export class PopupExchange extends Component {
 
         if (this.count) {
             const step = this.rate > 0 ? this.rate : 1;
-            const maxExchangeAmount = this.rate > 0
-                ? Math.max(0, Math.floor(availableFruit / this.rate) * this.rate)
-                : Math.max(0, Math.floor(availableFruit));
 
             this.count.min = 0;
-            this.count.max = maxExchangeAmount;
+            this.count.max = 99999999;
             this.count.step = step;
-            this.count.defaultValue = maxExchangeAmount >= step ? step : 0;
+            this.count.defaultValue = step;
             this.count.value = this.count.defaultValue;
         }
     }

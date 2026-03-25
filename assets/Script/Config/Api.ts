@@ -39,7 +39,7 @@ export interface MySeedParams {
 export interface BuySeedParams {
     seed_id: number;
     buy_num: number;
-    pay_ccy: 'balance_xz' | 'balance_fairy_stone';
+    pay_ccy: 'balance_xz' | 'balance_fairy_stone' | 'balance_usdt';
 }
 
 export interface ExchangeConfig {
@@ -52,6 +52,65 @@ export interface ExchangeParams {
 }
 
 export interface SignInfo {
+    [key: string]: any;
+}
+
+export interface LandInfo {
+    id?: number;
+    land_id?: number;
+    seed_id?: number;
+    seed_name?: string;
+    seed_img?: string;
+    grow_img?: string;
+    ripe_img?: string;
+    next_ripe_time?: string;
+    ripe_day?: number | string;
+    cycle?: number | string;
+    count_yield?: number | string;
+    ripe_yield?: number | string;
+    this_ripe_yield?: number | string;
+    status?: number | string;
+    [key: string]: any;
+}
+
+export interface LandListItem {
+    id?: number;
+    land_id?: number;
+    type?: number | string;
+    level?: number | string;
+    land_info?: LandInfo;
+    [key: string]: any;
+}
+
+export interface LandListResponse {
+    land_list?: LandListItem[];
+    data?: LandListItem[] | { list?: LandListItem[]; land_list?: LandListItem[]; refresh_time?: number };
+    list?: LandListItem[];
+    refresh_time?: number | string;
+    [key: string]: any;
+}
+
+export interface LandSowParams {
+    land_id: number;
+    seed_id: number;
+}
+
+export interface LandOperateParams {
+    sow_detail_id: number;
+}
+
+export interface LandSowResponse {
+    land_info?: LandInfo;
+    data?: {
+        land_info?: LandInfo;
+        [key: string]: any;
+    };
+    [key: string]: any;
+}
+
+export interface LandDetailResponse {
+    land_info?: LandInfo;
+    data?: LandInfo | { land_info?: LandInfo };
     [key: string]: any;
 }
 
@@ -92,6 +151,36 @@ export class Api {
     /** GET /api/seed/my 获取我的种子列表 */
     static mySeed(params: MySeedParams = {}): Promise<MySeedItem[] | { data?: MySeedItem[]; list?: MySeedItem[] }> {
         return http.get('/api/seed/my', params);
+    }
+
+    /** GET /api/land/{type} 获取土地列表 */
+    static landList(type: number | string): Promise<LandListResponse> {
+        return http.get(`/api/land/${type}`);
+    }
+
+    /** GET /api/land/info/{land_id} 获取土地详情 */
+    static landInfo(landId: number | string): Promise<LandDetailResponse> {
+        return http.get(`/api/land/info/${landId}`);
+    }
+
+    /** POST /api/land/water 浇水 */
+    static landWater(data: LandOperateParams): Promise<LandSowResponse> {
+        return http.post('/api/land/water', data);
+    }
+
+    /** POST /api/land/pick 采摘 */
+    static landPick(data: LandOperateParams): Promise<LandSowResponse> {
+        return http.post('/api/land/pick', data);
+    }
+
+    /** POST /api/land/remove 铲除 */
+    static landRemove(data: LandOperateParams): Promise<LandSowResponse> {
+        return http.post('/api/land/remove', data);
+    }
+
+    /** POST /api/land/sow 播种 */
+    static landSow(data: LandSowParams): Promise<LandSowResponse> {
+        return http.post('/api/land/sow', data);
     }
 
     /** POST /api/seed/buy_seed 购买种子 */

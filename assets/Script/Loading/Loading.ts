@@ -13,16 +13,18 @@ export class Loading extends Component {
 
     private progressBar: ProgressBar | null = null;
     private targetProgress = 0;
+    private initPromise: Promise<any> | null = null;
 
     onLoad() {
         this.progressBar = this.progressBarNode?.getComponent(ProgressBar) ?? null;
         if (this.progressBar) {
             this.progressBar.progress = 0;
         }
+        this.initPromise = AppBridge.init();
     }
 
     async start() {
-        await AppBridge.init();
+        await this.initPromise;
 
         director.preloadScene(
             SCENE_NAME,

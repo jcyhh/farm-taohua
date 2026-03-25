@@ -107,7 +107,6 @@ export class PopupBackpack extends Component {
         try {
             const response = await Api.mySeed();
             const list = this.pickMySeedList(response);
-            console.log('[PopupBackpack] 种子列表:', list);
             this.renderSeedList(list);
         } catch (error) {
             console.error('[PopupBackpack] 获取种子列表失败:', error);
@@ -117,7 +116,6 @@ export class PopupBackpack extends Component {
     private async loadExchangeConfig() {
         try {
             this.exchangeConfig = await Api.exchangeConfig();
-            console.log('[PopupBackpack] 兑换配置:', this.exchangeConfig);
             this.renderExchangeConfig();
         } catch (error) {
             this.exchangeConfig = null;

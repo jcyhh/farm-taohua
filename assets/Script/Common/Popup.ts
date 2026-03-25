@@ -1,5 +1,6 @@
 import { _decorator, Component, Node, tween, Vec3 } from 'cc';
 import { AudioManager } from '../Manager/AudioManager';
+import { Land } from '../Prefab/Land';
 
 const { ccclass, property } = _decorator;
 
@@ -23,6 +24,9 @@ export class Popup extends Component {
     @property({ tooltip: '点击遮罩是否关闭弹窗' })
     closeOnMaskClick = true;
 
+    @property({ tooltip: '打开延迟(秒)' })
+    openDelay = 0.3;
+
     @property({ type: Node, tooltip: '父级弹窗节点(二级弹窗时设置)' })
     parentPopupNode: Node | null = null;
 
@@ -35,34 +39,43 @@ export class Popup extends Component {
     open() {
         if (!this.content || this.isTweening) return;
 
+        Land.deselectCurrent();
+
         if (this.parentPopup?.mask) {
             this.parentPopup.mask.active = false;
         }
 
         this.isTweening = true;
-        this.node.active = true;
-        if (this.mask) {
-            this.mask.active = true;
-            if (this.closeOnMaskClick) {
-                this.scheduleOnce(() => {
-                    if (this.mask?.isValid && this.node.active) {
-                        this.mask.once(Node.EventType.TOUCH_END, this.close, this);
-                    }
-                }, 0);
-            }
-        }
-        this.content.active = true;
-
-        tween(this.content).stop();
-        this.content.setScale(0, 0, 1);
-
-        tween(this.content)
-            .to(this.step1Duration, { scale: new Vec3(this.overshootScale, this.overshootScale, 1) }, { easing: 'cubicOut' })
-            .to(this.step2Duration, { scale: new Vec3(1, 1, 1) }, { easing: 'cubicInOut' })
-            .call(() => {
+        this.scheduleOnce(() => {
+            if (!this.isValid || !this.content?.isValid) {
                 this.isTweening = false;
-            })
-            .start();
+                return;
+            }
+
+            this.node.active = true;
+            if (this.mask) {
+                this.mask.active = true;
+                if (this.closeOnMaskClick) {
+                    this.scheduleOnce(() => {
+                        if (this.mask?.isValid && this.node.active) {
+                            this.mask.once(Node.EventType.TOUCH_END, this.close, this);
+                        }
+                    }, 0);
+                }
+            }
+            this.content.active = true;
+
+            tween(this.content).stop();
+            this.content.setScale(0, 0, 1);
+
+            tween(this.content)
+                .to(this.step1Duration, { scale: new Vec3(this.overshootScale, this.overshootScale, 1) }, { easing: 'cubicOut' })
+                .to(this.step2Duration, { scale: new Vec3(1, 1, 1) }, { easing: 'cubicInOut' })
+                .call(() => {
+                    this.isTweening = false;
+                })
+                .start();
+        }, this.openDelay);
     }
 
     close() {

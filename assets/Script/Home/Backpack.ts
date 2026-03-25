@@ -1,5 +1,10 @@
 import { _decorator, assetManager, Component, ImageAsset, instantiate, Label, Node, Prefab, Sprite, SpriteFrame, Texture2D, tween, Vec3 } from 'cc';
-import { Api, MySeedItem } from '../Config/Api';
+import { Api, LandListItem, LandSowParams, LandSowResponse, MySeedItem } from '../Config/Api';
+import { Toast } from '../Common/Toast';
+import { AudioManager } from '../Manager/AudioManager';
+import { PopupPicker } from './PopupPicker';
+import { Land } from '../Prefab/Land';
+import { Storage } from '../Utils/Storage';
 
 const { ccclass, property } = _decorator;
 
@@ -13,6 +18,9 @@ export class Backpack extends Component {
 
     @property({ tooltip: '动画时长(秒)' })
     duration = 0.25;
+
+    @property({ tooltip: '土地等级缓存 key' })
+    pickerStorageKey = 'popup_picker_value';
 
     private readonly hideY = -253;
     private readonly showY = 92;
@@ -31,6 +39,8 @@ export class Backpack extends Component {
         }
         const pos = this.node.position;
         this.node.setPosition(pos.x, this.hideY, pos.z);
+        PopupPicker.renderStoredLandName(this.pickerStorageKey, 1);
+        Land.applyStoredLandType(this.pickerStorageKey, 1);
     }
 
     onDestroy() {
@@ -60,8 +70,8 @@ export class Backpack extends Component {
 
     private async loadMySeed() {
         try {
-            const response = await Api.mySeed({ land_level: 1 });
-            console.log('[Backpack] 我的种子列表:', response);
+            const landLevel = Storage.getNumber(this.pickerStorageKey, 1);
+            const response = await Api.mySeed({ land_level: landLevel });
             this.renderSeedList(this.pickMySeedList(response));
         } catch (error) {
             console.error('[Backpack] 获取我的种子列表失败:', error);
@@ -112,6 +122,67 @@ export class Backpack extends Component {
         }
 
         void this.loadRemoteSprite(seedSprite, String(item.seed?.seed_img ?? ''));
+        node.on(Node.EventType.TOUCH_END, () => {
+            void this.onSeedItemClick(item);
+        }, this);
+    }
+
+    private async onSeedItemClick(item: MySeedItem) {
+        const selectedLand = Land.currentSelected;
+        const payload = this.buildLandSowParams(item, selectedLand);
+        if (!payload || !selectedLand) return;
+
+        try {
+            const response = await Api.landSow(payload);
+            this.applySowResultToLand(selectedLand, response, payload.land_id);
+            AudioManager.instance?.playFruit();
+            Toast.showSuccess('播种成功');
+        } catch (error) {
+            console.error('[Backpack] 播种失败:', error);
+        }
+    }
+
+    private buildLandSowParams(item: MySeedItem, selectedLand: Land | null): LandSowParams | null {
+        if (!selectedLand) {
+            Toast.showFail('请先选择土地');
+            return null;
+        }
+
+        const seedId = Number(item.seed?.seed_id);
+        if (!Number.isFinite(seedId) || seedId <= 0) {
+            Toast.showFail('种子数据异常');
+            return null;
+        }
+
+        const landId = selectedLand.getRequestLandId(this.pickerStorageKey);
+        if (!landId) {
+            Toast.showFail('土地数据异常');
+            return null;
+        }
+
+        return {
+            land_id: landId,
+            seed_id: seedId,
+        };
+    }
+
+    private applySowResultToLand(targetLand: Land, response: LandSowResponse, landId: number) {
+        const landInfo = this.pickSowLandInfo(response);
+        if (!landInfo) {
+            console.warn('[Backpack] 播种成功，但未返回 land_info:', response);
+            return;
+        }
+
+        const latestLandData: LandListItem = {
+            ...(targetLand.landData ?? {}),
+            land_id: landId,
+            land_info: landInfo,
+        };
+        targetLand.setLandData(latestLandData);
+    }
+
+    private pickSowLandInfo(response: LandSowResponse) {
+        return response.land_info ?? response.data?.land_info ?? null;
     }
 
     private async loadRemoteSprite(sprite: Sprite | null, url: string) {

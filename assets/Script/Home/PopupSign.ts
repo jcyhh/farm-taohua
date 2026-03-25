@@ -3,6 +3,7 @@ import { Api, SignInfo } from '../Config/Api';
 import { Label } from 'cc';
 import { Toast } from '../Common/Toast';
 import { Popup } from '../Common/Popup';
+import { AppBridge } from '../Utils/AppBridge';
 const { ccclass } = _decorator;
 
 @ccclass('PopupSign')
@@ -23,7 +24,6 @@ export class PopupSign extends Component {
     async onEnable() {
         try {
             this.signInfo = await Api.signInfo();
-            console.log('[PopupSign] 签到信息:', this.signInfo);
             this.renderSignInfo();
         } catch (error) {
             this.signInfo = null;
@@ -52,6 +52,7 @@ export class PopupSign extends Component {
         const signedToday = Boolean(this.signInfo?.signed_today);
         const continuousDays = Number(this.signInfo?.continuous_days ?? 0) || 0;
         const signSteps = this.signInfo?.sign_steps ?? 0;
+        const stepCount = Number(AppBridge.getParam('stepCount', '0')) || 0;
 
         if (this.titleLabel) {
             this.titleLabel.string = signedToday ? '今日已签到' : '今日未签到';
@@ -60,7 +61,7 @@ export class PopupSign extends Component {
             this.statsLabel.string = `已连续签到${continuousDays}天`;
         }
         if (this.progressLabel) {
-            this.progressLabel.string = `今日徒步0/${signSteps}km`;
+            this.progressLabel.string = `今日徒步${stepCount}/${signSteps}km`;
         }
         if (this.buttonLabel) {
             this.buttonLabel.string = signedToday ? '已签到' : '签到';

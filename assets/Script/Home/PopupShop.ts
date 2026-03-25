@@ -28,7 +28,6 @@ export class PopupShop extends Component {
         try {
             const response = await Api.seed();
             const seedList = this.pickSeedList(response);
-            console.log('[PopupShop] 种子列表:', seedList);
             return seedList.map((seed) => this.toGoodsData(seed));
         } catch (error) {
             console.error('[PopupShop] 获取种子列表失败:', error);
