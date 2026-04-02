@@ -51,12 +51,24 @@ export class MapRoot extends Component {
         if (MapRoot._instance === this) {
             MapRoot._instance = null;
         }
-        this.node.off(Node.EventType.TOUCH_START, this.onTouchStart, this);
-        this.node.off(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
-        this.node.off(Node.EventType.TOUCH_END, this.onTouchEnd, this);
-        this.node.off(Node.EventType.TOUCH_CANCEL, this.onTouchEnd, this);
+        this.safeOff(this.node, Node.EventType.TOUCH_START, this.onTouchStart);
+        this.safeOff(this.node, Node.EventType.TOUCH_MOVE, this.onTouchMove);
+        this.safeOff(this.node, Node.EventType.TOUCH_END, this.onTouchEnd);
+        this.safeOff(this.node, Node.EventType.TOUCH_CANCEL, this.onTouchEnd);
         director.off(LAND_TYPE_CHANGED_EVENT, this.onLandTypeChanged, this);
         this.unschedule(this.refreshLandListTimer);
+    }
+
+    onExternalTouchStart(event: EventTouch) {
+        this.onTouchStart(event);
+    }
+
+    onExternalTouchMove(event: EventTouch) {
+        this.onTouchMove(event);
+    }
+
+    onExternalTouchEnd(event: EventTouch) {
+        this.onTouchEnd(event);
     }
 
     private onTouchStart(event: EventTouch) {
@@ -286,5 +298,13 @@ export class MapRoot extends Component {
         const match = name.match(/land(\d+)$/);
         const landIndex = Number(match?.[1]);
         return Number.isFinite(landIndex) && landIndex > 0 ? landIndex : 0;
+    }
+
+    private safeOff(node: Node | null | undefined, eventType: string, callback: (...args: any[]) => void) {
+        const target = node as any;
+        if (!target?.isValid || !target._eventProcessor) {
+            return;
+        }
+        target.off(eventType, callback, this);
     }
 }

@@ -1,5 +1,6 @@
 import { _decorator, Component, Node, RichText } from 'cc';
 import { Api, BuySeedParams } from '../Config/Api';
+import { t } from '../Config/I18n';
 import { Toast } from '../Common/Toast';
 import { Popup } from '../Common/Popup';
 import { Count } from '../Prefab/Count';
@@ -87,7 +88,7 @@ export class PopupBuy extends Component {
             await Api.buySeed(payload);
             await UiHeadbar.refreshUserInfo();
             AudioManager.instance?.playGold();
-            Toast.showSuccess('购买成功');
+            Toast.showSuccess(t('购买成功'));
             this.node.getComponent(Popup)?.close();
         } catch (error) {
             console.error('[PopupBuy] 购买失败:', error);
@@ -115,8 +116,10 @@ export class PopupBuy extends Component {
     private refreshText() {
         if (!this.tipText) return;
         const total = this.unitPrice * (this.count?.value ?? 1);
-        this.tipText.string =
-            `<bold>是否购买价值<color=#FF0084>${total}USDT</color>${this.goodsName}种子</bold>`;
+        this.tipText.string = t('<bold>是否购买价值<color=#FF0084>{total}USDT</color>{name}种子</bold>', {
+            total,
+            name: this.goodsName,
+        });
     }
 
     private updateRadioState() {
@@ -140,23 +143,31 @@ export class PopupBuy extends Component {
     }
 
     private bindRadioNode(target: Node | null, handler: () => void) {
-        if (!target) return;
+        if (!target?.isValid) return;
 
         target.on(Node.EventType.TOUCH_END, handler, this);
         this.radioClickNodes.push(target);
 
-        for (const child of target.children) {
+        for (const child of [...target.children]) {
             this.bindRadioNode(child, handler);
         }
     }
 
     private unbindRadioNode(target: Node | null, handler: () => void) {
-        if (!target) return;
+        if (!target?.isValid) return;
 
-        target.off(Node.EventType.TOUCH_END, handler, this);
+        this.safeOff(target, Node.EventType.TOUCH_END, handler);
 
-        for (const child of target.children) {
+        for (const child of [...target.children]) {
             this.unbindRadioNode(child, handler);
         }
+    }
+
+    private safeOff(node: Node | null | undefined, eventType: string, callback: (...args: any[]) => void) {
+        const target = node as any;
+        if (!target?.isValid || !target._eventProcessor) {
+            return;
+        }
+        target.off(eventType, callback, this);
     }
 }

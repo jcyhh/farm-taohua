@@ -1,6 +1,15 @@
 import { _decorator, Component, Label } from 'cc';
 import { Api, SignInfo } from '../Config/Api';
+import { t } from '../Config/I18n';
+
 const { ccclass } = _decorator;
+
+/** 与 I18n 字典 key 完全一致（含换行） */
+const SIGN_RULE_TEMPLATE =
+    '桃花源正式开启内测阶段\n' +
+    '现招募体验玩家 连续签到打卡{gift_cycle}天\n' +
+    '送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n' +
+    '限量{gift_limit}席';
 
 @ccclass('PopupRule')
 export class PopupRule extends Component {
@@ -23,11 +32,16 @@ export class PopupRule extends Component {
         if (!this.ruleLabel) return;
 
         const giftCycle = Number(signInfo?.gift_cycle ?? 0) || 0;
-        const maxGiftNum = Number(signInfo?.max_gift_num ?? 0) || 0;
-        const totalGifted = Number(signInfo?.total_gifted ?? 0) || 0;
+        const giftAmount = Number(signInfo?.gift_amount ?? 0) || 0;
+        const seedCycle = Number(signInfo?.seed_cycle ?? 0) || 0;
+        const giftLimit = Number(signInfo?.gift_limit ?? 0) || 0;
 
-        this.ruleLabel.string =
-            `每连续签到${giftCycle}天赠送一颗种子，最大可获赠${maxGiftNum}颗种子，当前已获赠${totalGifted}/${maxGiftNum}`;
+        this.ruleLabel.string = t(SIGN_RULE_TEMPLATE, {
+            gift_cycle: giftCycle,
+            gift_amount: giftAmount,
+            seed_cycle: seedCycle,
+            gift_limit: giftLimit,
+        });
     }
 }
 

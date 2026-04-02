@@ -3,6 +3,7 @@ import { Api, SignInfo } from '../Config/Api';
 import { Label } from 'cc';
 import { Toast } from '../Common/Toast';
 import { Popup } from '../Common/Popup';
+import { t } from '../Config/I18n';
 import { AppBridge } from '../Utils/AppBridge';
 const { ccclass } = _decorator;
 
@@ -33,15 +34,26 @@ export class PopupSign extends Component {
 
     async onConfirm() {
         if (this.signInfo?.signed_today) {
-            Toast.showFail('今日已签到');
+            Toast.showFail(t('今日已签到，无法重复签到'));
+            return;
+        }
+
+        const signSteps = Number(this.signInfo?.sign_steps ?? 0) || 0;
+        const stepCount = Number(AppBridge.getParam('stepCount', '0')) || 0;
+        if (stepCount < signSteps) {
+            Toast.showFail(t('今日徒步未达标'));
             return;
         }
 
         try {
-            await Api.sign();
+            await Api.sign({
+                timestamp: AppBridge.getParam('timestamp'),
+                sign: AppBridge.getParam('sign'),
+                steps: stepCount,
+            });
             this.signInfo = { ...(this.signInfo ?? {}), signed_today: true };
             this.renderSignInfo();
-            Toast.showSuccess('签到成功');
+            Toast.showSuccess(t('签到成功'));
             this.node.getComponent(Popup)?.close();
         } catch (error) {
             console.error('[PopupSign] 签到失败:', error);
@@ -55,16 +67,16 @@ export class PopupSign extends Component {
         const stepCount = Number(AppBridge.getParam('stepCount', '0')) || 0;
 
         if (this.titleLabel) {
-            this.titleLabel.string = signedToday ? '今日已签到' : '今日未签到';
+            this.titleLabel.string = signedToday ? t('今日已签到') : t('今日未签到');
         }
         if (this.statsLabel) {
-            this.statsLabel.string = `已连续签到${continuousDays}天`;
+            this.statsLabel.string = t('已连续签到{days}天', { days: continuousDays });
         }
         if (this.progressLabel) {
-            this.progressLabel.string = `今日徒步${stepCount}/${signSteps}km`;
+            this.progressLabel.string = t('今日徒步{stepCount}/{signSteps}km', { stepCount, signSteps });
         }
         if (this.buttonLabel) {
-            this.buttonLabel.string = signedToday ? '已签到' : '签到';
+            this.buttonLabel.string = signedToday ? t('已签到') : t('签到');
         }
     }
 }

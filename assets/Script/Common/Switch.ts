@@ -35,7 +35,7 @@ export class Switch extends Component {
     }
 
     onDestroy() {
-        this.node.off(Node.EventType.TOUCH_END, this.onClick, this);
+        this.safeOff(this.node, Node.EventType.TOUCH_END, this.onClick);
     }
 
     setState(isOn: boolean, animate = false) {
@@ -69,5 +69,13 @@ export class Switch extends Component {
 
         if (this.onNode) this.onNode.active = this.isOn;
         if (this.offNode) this.offNode.active = !this.isOn;
+    }
+
+    private safeOff(node: Node | null | undefined, eventType: string, callback: (...args: any[]) => void) {
+        const target = node as any;
+        if (!target?.isValid || !target._eventProcessor) {
+            return;
+        }
+        target.off(eventType, callback, this);
     }
 }

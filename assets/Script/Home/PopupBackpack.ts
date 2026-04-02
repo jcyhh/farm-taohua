@@ -1,6 +1,8 @@
-import { _decorator, assetManager, Button, Component, ImageAsset, instantiate, Label, Node, Sprite, SpriteFrame, Texture2D, tween, Vec3 } from 'cc';
+import { _decorator, Button, Component, instantiate, Label, Node, Sprite, tween, Vec3 } from 'cc';
 import { Api, MySeedItem, UserProfile } from '../Config/Api';
+import { t } from '../Config/I18n';
 import { formatAmount } from '../Utils/Format';
+import { RemoteSpriteCache } from '../Utils/RemoteSpriteCache';
 import { UiHeadbar } from './UiHeadbar';
 
 const { ccclass, property } = _decorator;
@@ -28,8 +30,6 @@ export class PopupBackpack extends Component {
     private seedItemTemplate: Node | null = null;
     private fruitItemTemplate: Node | null = null;
     private popup2CoinLabel: Label | null = null;
-    private static readonly imageCache = new Map<string, SpriteFrame>();
-
     onLoad() {
         this.popup2CoinLabel = this.fruitContent?.getChildByPath('popup2/coin')?.getComponent(Label) ?? null;
         this.fruitItemTemplate = this.fruitContent?.getChildByName('seed') ?? null;
@@ -178,7 +178,7 @@ export class PopupBackpack extends Component {
 
     private renderExchangeConfig() {
         if (!this.popup2CoinLabel) return;
-        this.popup2CoinLabel.string = `${formatAmount(this.exchangeConfig?.rate ?? 0)}桃花果`;
+        this.popup2CoinLabel.string = t('{count}桃花果', { count: formatAmount(this.exchangeConfig?.rate ?? 0) });
     }
 
     private fillSeedItem(node: Node, item: MySeedItem) {
@@ -198,44 +198,19 @@ export class PopupBackpack extends Component {
     }
 
     private async loadRemoteSprite(sprite: Sprite | null, url: string) {
-        if (!sprite) return;
+        if (!sprite?.isValid) return;
 
         if (!url) {
             sprite.spriteFrame = null;
             return;
         }
 
-        const cachedFrame = PopupBackpack.imageCache.get(url);
-        if (cachedFrame) {
-            sprite.spriteFrame = cachedFrame;
-            return;
-        }
-
         try {
-            const imageAsset = await this.loadRemoteImage(url);
-            if (!imageAsset) return;
-
-            const texture = new Texture2D();
-            texture.image = imageAsset;
-
-            const spriteFrame = new SpriteFrame();
-            spriteFrame.texture = texture;
-            PopupBackpack.imageCache.set(url, spriteFrame);
+            const spriteFrame = await RemoteSpriteCache.load(url);
+            if (!spriteFrame?.isValid || !sprite?.isValid) return;
             sprite.spriteFrame = spriteFrame;
         } catch (error) {
             console.error(`[PopupBackpack] 加载种子图片失败: ${url}`, error);
         }
-    }
-
-    private loadRemoteImage(url: string): Promise<ImageAsset | null> {
-        return new Promise((resolve, reject) => {
-            assetManager.loadRemote<ImageAsset>(url, (error, imageAsset) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve(imageAsset ?? null);
-            });
-        });
     }
 }

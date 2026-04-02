@@ -1,4 +1,5 @@
 import { _decorator, Button, Component, director, Label, Node } from 'cc';
+import { t } from '../Config/I18n';
 import { Storage } from '../Utils/Storage';
 import { Popup } from '../Common/Popup';
 import { Land } from '../Prefab/Land';
@@ -35,7 +36,8 @@ export class PopupPicker extends Component {
     }
 
     static getLandName(value: number) {
-        return PopupPicker.LAND_NAMES[PopupPicker.normalizeValue(value) - 1] ?? PopupPicker.LAND_NAMES[0];
+        const key = PopupPicker.LAND_NAMES[PopupPicker.normalizeValue(value) - 1] ?? PopupPicker.LAND_NAMES[0];
+        return t(key);
     }
 
     static renderStoredLandName(storageKey = 'popup_picker_value', defaultValue = 1) {
@@ -69,7 +71,7 @@ export class PopupPicker extends Component {
     onDestroy() {
         this.unschedule(this.finishSelectionResult);
         this.unschedule(this.applySelectionResult);
-        this.itemNodes.forEach((node) => node.targetOff(this));
+        this.itemNodes.forEach((node) => this.safeTargetOff(node));
     }
 
     private selectValue(value: number) {
@@ -134,6 +136,14 @@ export class PopupPicker extends Component {
     private static normalizeValue(value: number) {
         const max = PopupPicker.LAND_NAMES.length;
         return Math.min(Math.max(Math.floor(value || 1), 1), max);
+    }
+
+    private safeTargetOff(node: Node | null | undefined) {
+        const target = node as any;
+        if (!target?.isValid || !target._eventProcessor) {
+            return;
+        }
+        target.targetOff(this);
     }
 }
 

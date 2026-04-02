@@ -1,13 +1,14 @@
-import { _decorator, assetManager, Component, director, ImageAsset, Label, Node, ProgressBar, Sprite, SpriteFrame, Texture2D, tween, Vec3 } from 'cc';
+import { _decorator, Component, director, Label, Node, ProgressBar, Sprite, tween, Vec3 } from 'cc';
 import { Api, LandDetailResponse, LandInfo as LandInfoData, LandListItem } from '../Config/Api';
+import { t } from '../Config/I18n';
 import { UiHeadbar } from './UiHeadbar';
 import { LAND_FOCUS_CHANGED_EVENT, Land } from '../Prefab/Land';
+import { RemoteSpriteCache } from '../Utils/RemoteSpriteCache';
 const { ccclass, property } = _decorator;
 
 @ccclass('LandInfo')
 export class LandInfo extends Component {
     private static _instance: LandInfo | null = null;
-    private static readonly imageCache = new Map<string, SpriteFrame>();
 
     @property({ tooltip: '动画时长(秒)' })
     duration = 0.25;
@@ -31,6 +32,8 @@ export class LandInfo extends Component {
     private timeLabel: Label | null = null;
     private progressBar: ProgressBar | null = null;
     private progressLabel: Label | null = null;
+    private yieldProgressBar: ProgressBar | null = null;
+    private yieldProgressLabel: Label | null = null;
     private countNode: Node | null = null;
     private countLabel: Label | null = null;
 
@@ -49,8 +52,14 @@ export class LandInfo extends Component {
         this.statusLabel = this.node.getChildByName('status')?.getComponent(Label) ?? null;
         this.timeNode = this.node.getChildByName('time');
         this.timeLabel = this.timeNode?.getComponent(Label) ?? null;
-        this.progressBar = this.node.getChildByName('ProgressBar')?.getComponent(ProgressBar) ?? null;
-        this.progressLabel = this.node.getChildByName('progress')?.getComponent(Label) ?? null;
+        this.progressBar = this.node.getChildByPath('progress/Node/ProgressBar')?.getComponent(ProgressBar)
+            ?? this.node.getChildByName('ProgressBar')?.getComponent(ProgressBar)
+            ?? null;
+        this.progressLabel = this.node.getChildByPath('progress/Node/progress')?.getComponent(Label)
+            ?? this.node.getChildByName('progress')?.getComponent(Label)
+            ?? null;
+        this.yieldProgressBar = this.node.getChildByPath('progress/Node-001/ProgressBar')?.getComponent(ProgressBar) ?? null;
+        this.yieldProgressLabel = this.node.getChildByPath('progress/Node-001/progress')?.getComponent(Label) ?? null;
         this.countNode = this.node.getChildByName('count');
         this.countLabel = this.countNode?.getComponent(Label) ?? null;
     }
@@ -148,15 +157,25 @@ export class LandInfo extends Component {
             this.progressBar.progress = progress;
         }
         if (this.progressLabel) {
-            this.progressLabel.string = `进度${ripeDay}/${cycle}天`;
+            this.progressLabel.string = t('{ripeDay}/{cycle}天', { ripeDay, cycle });
+        }
+
+        const ripeYield = Number(landInfo.ripe_yield ?? 0);
+        const countYield = Number(landInfo.count_yield ?? 0);
+        const yieldProgress = countYield > 0 ? Math.max(0, Math.min(1, ripeYield / countYield)) : 0;
+        if (this.yieldProgressBar) {
+            this.yieldProgressBar.progress = yieldProgress;
+        }
+        if (this.yieldProgressLabel) {
+            this.yieldProgressLabel.string = t('{ripeYield}/{countYield}桃花果', { ripeYield, countYield });
         }
 
         if (this.countNode) {
             this.countNode.active = status === 3;
         }
         if (this.countLabel) {
-            const ripeYield = Number(landInfo.this_ripe_yield ?? landInfo.ripe_yield ?? 0);
-            this.countLabel.string = status === 3 ? `可采摘${ripeYield}桃花果` : '';
+            const currentRipeYield = Number(landInfo.this_ripe_yield ?? landInfo.ripe_yield ?? 0);
+            this.countLabel.string = status === 3 ? t('可采摘{count}桃花果', { count: currentRipeYield }) : '';
         }
 
         if (this.timeNode) {
@@ -184,7 +203,7 @@ export class LandInfo extends Component {
         if (!this.timeLabel || !this.currentLandInfo) return;
         const remainingMs = this.getRemainingMs(this.currentLandInfo.next_ripe_time);
         if (remainingMs <= 0) {
-            this.timeLabel.string = '00:00:00后成熟';
+            this.timeLabel.string = t('{time}后成熟', { time: '00:00:00' });
             this.unschedule(this.updateCountdown);
             if (!this.hasHandledCountdownFinish) {
                 this.hasHandledCountdownFinish = true;
@@ -192,24 +211,33 @@ export class LandInfo extends Component {
             }
             return;
         }
-        this.timeLabel.string = `${this.formatDuration(remainingMs)}后成熟`;
+        this.timeLabel.string = t('{time}后成熟', { time: this.formatDuration(remainingMs) });
     };
 
     private getStatusText(status: number) {
         switch (status) {
-            case 1: return '待浇水';
-            case 2: return '成长中';
-            case 3: return '待采摘';
-            case 4: return '枯萎待铲除';
+            case 1: return t('待浇水');
+            case 2: return t('成长中');
+            case 3: return t('待采摘');
+            case 4: return t('枯萎待铲除');
             default: return '';
         }
     }
 
     private getRemainingMs(nextRipeTime?: string) {
-        if (!nextRipeTime) return 0;
-        const target = new Date(nextRipeTime.replace(' ', 'T'));
-        if (Number.isNaN(target.getTime())) return 0;
+        const target = this.parseChinaDate(nextRipeTime);
+        if (!target) return 0;
         return Math.max(0, target.getTime() - Date.now());
+    }
+
+    private parseChinaDate(dateTime?: string) {
+        if (!dateTime) return null;
+        const normalized = String(dateTime).trim().replace(' ', 'T');
+        if (!normalized) return null;
+        const hasTimezone = /([zZ]|[+\-]\d{2}:?\d{2})$/.test(normalized);
+        const target = new Date(hasTimezone ? normalized : `${normalized}+08:00`);
+        if (Number.isNaN(target.getTime())) return null;
+        return target;
     }
 
     private formatDuration(remainingMs: number) {
@@ -225,45 +253,20 @@ export class LandInfo extends Component {
     }
 
     private async loadPlantSprite(url: string) {
-        if (!this.plantSprite) return;
+        if (!this.plantSprite?.isValid) return;
 
         if (!url) {
             this.plantSprite.spriteFrame = null;
             return;
         }
 
-        const cachedFrame = LandInfo.imageCache.get(url);
-        if (cachedFrame) {
-            this.plantSprite.spriteFrame = cachedFrame;
-            return;
-        }
-
         try {
-            const imageAsset = await this.loadRemoteImage(url);
-            if (!imageAsset) return;
-
-            const texture = new Texture2D();
-            texture.image = imageAsset;
-
-            const spriteFrame = new SpriteFrame();
-            spriteFrame.texture = texture;
-            LandInfo.imageCache.set(url, spriteFrame);
+            const spriteFrame = await RemoteSpriteCache.load(url);
+            if (!spriteFrame?.isValid || !this.plantSprite?.isValid) return;
             this.plantSprite.spriteFrame = spriteFrame;
         } catch (error) {
             console.error(`[LandInfo] 加载植物图片失败: ${url}`, error);
         }
-    }
-
-    private loadRemoteImage(url: string): Promise<ImageAsset | null> {
-        return new Promise((resolve, reject) => {
-            assetManager.loadRemote<ImageAsset>(url, (error, imageAsset) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve(imageAsset ?? null);
-            });
-        });
     }
 }
 

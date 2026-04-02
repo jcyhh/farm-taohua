@@ -1,10 +1,13 @@
-import { _decorator, assetManager, Component, director, EventTouch, ImageAsset, Node, Sprite, SpriteFrame, Enum, Texture2D, tween, UITransform, UIOpacity, Vec3, log } from 'cc';
+import { _decorator, Component, director, EventTouch, Node, Sprite, SpriteFrame, Enum, tween, UITransform, UIOpacity, Vec2, Vec3, log } from 'cc';
 import { Api, LandInfo as LandInfoData, LandListItem, LandOperateParams, LandSowResponse } from '../Config/Api';
+import { t } from '../Config/I18n';
 import { Toast } from '../Common/Toast';
 import { AudioManager } from '../Manager/AudioManager';
 import { Backpack } from '../Home/Backpack';
 import { LandInfo } from '../Home/LandInfo';
+import { MapRoot } from '../Home/MapRoot';
 import { UiHeadbar } from '../Home/UiHeadbar';
+import { RemoteSpriteCache } from '../Utils/RemoteSpriteCache';
 import { Storage } from '../Utils/Storage';
 
 const { ccclass, property } = _decorator;
@@ -24,13 +27,13 @@ const RIGHT_DOWN_OUTSIDE_LANDS = new Set(['land1', 'land2', 'land3']);
 const LEFT_DOWN_OUTSIDE_LANDS = new Set(['land3', 'land6', 'land9', 'land10']);
 const RIGHT_UP_OUTSIDE_LANDS = new Set(['land1', 'land4', 'land7', 'land10']);
 const LEFT_UP_OUTSIDE_LANDS = new Set(['land7', 'land8', 'land10']);
+const LAND_CLICK_CANCEL_DISTANCE = 10;
 
 @ccclass('Land')
 export class Land extends Component {
     private static readonly PICKER_STORAGE_KEY = 'popup_picker_value';
     private static readonly DEFAULT_LAND_TYPE = 1;
     private static readonly _instances = new Set<Land>();
-    private static readonly imageCache = new Map<string, SpriteFrame>();
     private static _currentLandType = Land.DEFAULT_LAND_TYPE;
     private static readonly LAND_SWITCH_SQUASH = new Vec3(0.9, 1.04, 1);
     private static readonly LAND_SWITCH_BOUNCE = new Vec3(1.04, 0.98, 1);
@@ -99,6 +102,8 @@ export class Land extends Component {
     private effectLayer: Node | null = null;
     private originScale = new Vec3();
     private isSelectTweening = false;
+    private suppressLandClick = false;
+    private landTouchStartPos = new Vec2();
 
     private static _currentSelected: Land | null = null;
     static get currentSelected(): Land | null { return Land._currentSelected; }
@@ -137,15 +142,30 @@ export class Land extends Component {
         if (this.selectNode) this.selectNode.active = false;
         this.applyLandSprite(Land._currentLandType, false);
         this.ensureEffectLayer();
+        this.node.on(Node.EventType.TOUCH_START, this.onLandTouchStart, this);
+        this.node.on(Node.EventType.TOUCH_MOVE, this.onLandTouchMove, this);
+        this.node.on(Node.EventType.TOUCH_END, this.onLandTouchEnd, this);
+        this.node.on(Node.EventType.TOUCH_CANCEL, this.onLandTouchEnd, this);
         this.water?.on(Node.EventType.TOUCH_END, this.onWaterClick, this);
         this.pick?.on(Node.EventType.TOUCH_END, this.onPickClick, this);
         this.clear?.on(Node.EventType.TOUCH_END, this.onRemoveClick, this);
     }
 
     onDestroy() {
-        this.water?.off(Node.EventType.TOUCH_END, this.onWaterClick, this);
-        this.pick?.off(Node.EventType.TOUCH_END, this.onPickClick, this);
-        this.clear?.off(Node.EventType.TOUCH_END, this.onRemoveClick, this);
+        this.unscheduleAllCallbacks();
+        tween(this.node).stop();
+        this.tree?.isValid && tween(this.tree).stop();
+        this.landSprite?.isValid && tween(this.landSprite).stop();
+        this.safeOff(this.node, Node.EventType.TOUCH_START, this.onLandTouchStart);
+        this.safeOff(this.node, Node.EventType.TOUCH_MOVE, this.onLandTouchMove);
+        this.safeOff(this.node, Node.EventType.TOUCH_END, this.onLandTouchEnd);
+        this.safeOff(this.node, Node.EventType.TOUCH_CANCEL, this.onLandTouchEnd);
+        this.safeOff(this.water, Node.EventType.TOUCH_END, this.onWaterClick);
+        this.safeOff(this.pick, Node.EventType.TOUCH_END, this.onPickClick);
+        this.safeOff(this.clear, Node.EventType.TOUCH_END, this.onRemoveClick);
+        if (Land._currentSelected === this) {
+            Land._currentSelected = null;
+        }
         Land._instances.delete(this);
     }
 
@@ -344,10 +364,19 @@ export class Land extends Component {
     }
 
     private isNextRipeMoreThan12Hours(nextRipeTime?: string) {
-        if (!nextRipeTime) return false;
-        const target = new Date(nextRipeTime.replace(' ', 'T'));
-        if (Number.isNaN(target.getTime())) return false;
+        const target = this.parseChinaDate(nextRipeTime);
+        if (!target) return false;
         return target.getTime() - Date.now() > 12 * 60 * 60 * 1000;
+    }
+
+    private parseChinaDate(dateTime?: string) {
+        if (!dateTime) return null;
+        const normalized = String(dateTime).trim().replace(' ', 'T');
+        if (!normalized) return null;
+        const hasTimezone = /([zZ]|[+\-]\d{2}:?\d{2})$/.test(normalized);
+        const target = new Date(hasTimezone ? normalized : `${normalized}+08:00`);
+        if (Number.isNaN(target.getTime())) return null;
+        return target;
     }
 
     private getLandStatus() {
@@ -376,6 +405,30 @@ export class Land extends Component {
     private onWaterClick(event?: EventTouch) {
         if (event) event.propagationStopped = true;
         void this.runLandOperation('water');
+    }
+
+    private onLandTouchStart(event: EventTouch) {
+        if (event.target !== this.node) return;
+        this.landTouchStartPos.set(event.getUILocation());
+        this.suppressLandClick = event.getTouches().length >= 2;
+        MapRoot.instance?.onExternalTouchStart(event);
+    }
+
+    private onLandTouchMove(event: EventTouch) {
+        if (event.target !== this.node) return;
+        const currentPos = event.getUILocation();
+        if (
+            event.getTouches().length >= 2
+            || Vec2.distance(this.landTouchStartPos, currentPos) >= LAND_CLICK_CANCEL_DISTANCE
+        ) {
+            this.suppressLandClick = true;
+        }
+        MapRoot.instance?.onExternalTouchMove(event);
+    }
+
+    private onLandTouchEnd(event: EventTouch) {
+        if (event.target !== this.node) return;
+        MapRoot.instance?.onExternalTouchEnd(event);
     }
 
     private onPickClick(event?: EventTouch) {
@@ -434,7 +487,7 @@ export class Land extends Component {
     private buildLandOperateParams(): LandOperateParams | null {
         const sowDetailId = Number(this._landData?.land_info?.id);
         if (!Number.isFinite(sowDetailId) || sowDetailId <= 0) {
-            Toast.showFail('土地状态数据异常');
+            Toast.showFail(t('土地状态数据异常'));
             return null;
         }
 
@@ -470,9 +523,9 @@ export class Land extends Component {
 
     private getOperationSuccessText(action: 'water' | 'pick' | 'remove') {
         switch (action) {
-            case 'water': return '浇水成功';
-            case 'pick': return '采摘成功';
-            case 'remove': return '铲除成功';
+            case 'water': return t('浇水成功');
+            case 'pick': return t('采摘成功');
+            case 'remove': return t('铲除成功');
         }
     }
 
@@ -762,46 +815,19 @@ export class Land extends Component {
     private async applyRemoteTreeSprite(url: string, renderVersion: number) {
         if (!this.treeSprite) return;
 
-        const cachedFrame = Land.imageCache.get(url);
-        if (cachedFrame) {
-            if (renderVersion === this._treeRenderVersion) {
-                this.treeSprite.spriteFrame = cachedFrame;
-            }
-            return;
-        }
-
         try {
-            const imageAsset = await this.loadRemoteImage(url);
-            if (!imageAsset) return;
+            const spriteFrame = await RemoteSpriteCache.load(url);
+            if (!spriteFrame?.isValid) return;
 
-            const texture = new Texture2D();
-            texture.image = imageAsset;
-
-            const spriteFrame = new SpriteFrame();
-            spriteFrame.texture = texture;
-            Land.imageCache.set(url, spriteFrame);
-
-            if (renderVersion === this._treeRenderVersion && this.treeSprite) {
+            if (renderVersion === this._treeRenderVersion && this.treeSprite?.isValid) {
                 this.treeSprite.spriteFrame = spriteFrame;
             }
         } catch (error) {
             console.error(`[Land] 加载成熟植物图片失败: ${url}`, error);
-            if (renderVersion === this._treeRenderVersion && this.treeSprite) {
+            if (renderVersion === this._treeRenderVersion && this.treeSprite?.isValid) {
                 this.treeSprite.spriteFrame = this.matureFrame ?? this.seedlingFrame;
             }
         }
-    }
-
-    private loadRemoteImage(url: string): Promise<ImageAsset | null> {
-        return new Promise((resolve, reject) => {
-            assetManager.loadRemote<ImageAsset>(url, (error, imageAsset) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve(imageAsset ?? null);
-            });
-        });
     }
 
     private applyLandSprite(value: number, playAnim = false) {
@@ -847,6 +873,11 @@ export class Land extends Component {
     }
 
     onClick(event: EventTouch) {
+        if (this.suppressLandClick || event.getTouches().length >= 2) {
+            this.suppressLandClick = false;
+            return;
+        }
+        this.suppressLandClick = false;
         const uiPos = event.getUILocation();
         const worldPos = new Vec3(uiPos.x, uiPos.y, 0);
 
@@ -901,6 +932,14 @@ export class Land extends Component {
         }
 
         return false;
+    }
+
+    private safeOff(node: Node | null | undefined, eventType: string, callback: (...args: any[]) => void) {
+        const target = node as any;
+        if (!target?.isValid || !target._eventProcessor) {
+            return;
+        }
+        target.off(eventType, callback, this);
     }
 }
 

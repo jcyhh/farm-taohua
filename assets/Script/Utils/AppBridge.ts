@@ -1,10 +1,13 @@
 import { Request } from './Request';
 import { Storage } from './Storage';
+import { I18n, normalizeLang } from '../Config/I18n';
 
 interface AppParams {
     apiUrl: string;
-    wsUrl: string;
     token: string;
+    lang: string;
+    timestamp: string;
+    sign: string;
     [key: string]: string;
 }
 
@@ -16,7 +19,9 @@ export class AppBridge {
         const params = this._parseUrlParams();
         const cachedToken = Storage.getString(this.TOKEN_STORAGE_KEY, '');
         params.token = cachedToken || params.token;
+        params.lang = normalizeLang(params.lang);
         this._params = params;
+        I18n.init(params.lang);
 
         console.log('[AppBridge] 获取到的参数:', params);
 
@@ -29,6 +34,7 @@ export class AppBridge {
         if (params.token) {
             Request.instance.token = params.token;
         }
+        Request.instance.setHeader('Lang', params.lang);
 
         return params;
     }
@@ -36,6 +42,7 @@ export class AppBridge {
     static get params(): AppParams {
         if (!this._params) {
             this._params = this._parseUrlParams();
+            this._params.lang = normalizeLang(this._params.lang);
         }
         return this._params;
     }
@@ -65,7 +72,7 @@ export class AppBridge {
     }
 
     private static _parseUrlParams(): AppParams {
-        const result: AppParams = { apiUrl: '', wsUrl: '', token: '' };
+        const result: AppParams = { apiUrl: '', token: '', lang: '', timestamp: '', sign: '' };
 
         try {
             const search = typeof window !== 'undefined' ? window.location.search : '';

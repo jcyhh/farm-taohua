@@ -1,5 +1,6 @@
 import { _decorator, Component, Label, Node } from 'cc';
 import { Api, ExchangeConfig, ExchangeParams, UserProfile } from '../Config/Api';
+import { t } from '../Config/I18n';
 import { Toast } from '../Common/Toast';
 import { Popup } from '../Common/Popup';
 import { Count } from '../Prefab/Count';
@@ -39,21 +40,21 @@ export class PopupExchange extends Component {
     async onConfirm() {
         const amount = this.count?.value ?? 0;
         if (this.rate <= 0) {
-            Toast.showFail('兑换比例异常');
+            Toast.showFail(t('兑换比例异常'));
             return;
         }
         if (amount <= 0) {
-            Toast.showFail('请输入兑换数量');
+            Toast.showFail(t('请输入兑换数量'));
             return;
         }
         if (amount % this.rate !== 0) {
-            Toast.showFail('兑换数量不符合比例');
+            Toast.showFail(t('兑换数量不符合比例'));
             return;
         }
 
         const availableFruit = Math.floor(Number(this.userInfo?.balance_fruit ?? 0));
         if (amount > availableFruit) {
-            Toast.showFail('桃花果不足');
+            Toast.showFail(t('桃花果不足'));
             return;
         }
 
@@ -64,7 +65,7 @@ export class PopupExchange extends Component {
 
         try {
             await Api.exchangeFruitToFairyStone(payload);
-            Toast.showSuccess('兑换成功');
+            Toast.showSuccess(t('兑换成功'));
             this.userInfo = await UiHeadbar.refreshUserInfo();
             this.applyUserInfo();
             this.node.getComponent(Popup)?.close();
@@ -95,10 +96,10 @@ export class PopupExchange extends Component {
 
     private applyExchangeConfig() {
         if (this.rateLabel) {
-            this.rateLabel.string = `${formatAmount(this.rate)}桃花果≈1灵石`;
+            this.rateLabel.string = t('{count}桃花果≈1灵石', { count: formatAmount(this.rate) });
         }
         if (this.feeLabel) {
-            this.feeLabel.string = `手续费 : ${formatAmount(this.feeRate)}%`;
+            this.feeLabel.string = t('手续费 : {fee}%', { fee: formatAmount(this.feeRate) });
         }
     }
 
@@ -106,7 +107,7 @@ export class PopupExchange extends Component {
         const availableFruit = Number(this.userInfo?.balance_fruit ?? 0) || 0;
 
         if (this.myFruitLabel) {
-            this.myFruitLabel.string = `我的桃花果 : ${formatAmount(availableFruit)}`;
+            this.myFruitLabel.string = t('我的桃花果 : {count}', { count: formatAmount(availableFruit) });
         }
 
         if (this.count) {
@@ -126,7 +127,7 @@ export class PopupExchange extends Component {
         const amount = this.count?.value ?? 0;
         const grossTotal = this.rate > 0 ? amount / this.rate : 0;
         const total = grossTotal * (1 - this.feeRate / 100);
-        this.totalLabel.string = `总计 : ${formatAmount(total)}灵石`;
+        this.totalLabel.string = t('总计 : {count}灵石', { count: formatAmount(total) });
     }
 }
 

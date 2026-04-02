@@ -1,4 +1,5 @@
 import { Toast } from '../Common/Toast';
+import { normalizeLang } from '../Config/I18n';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -31,7 +32,7 @@ export class Request {
     private _token: string = '';
     private _defaultHeaders: Record<string, string> = {
         'Content-Type': 'application/json',
-        Lang: 'zh-Hans',
+        Lang: normalizeLang(Request.pickLangFromLocation()),
     };
     private _requestInterceptors: Interceptor<RequestInit>[] = [];
     private _responseInterceptors: Interceptor<any>[] = [];
@@ -44,6 +45,28 @@ export class Request {
     }
 
     private constructor() {}
+
+    private static pickLangFromLocation() {
+        if (typeof window === 'undefined') return '';
+
+        try {
+            const search = window.location.search || '';
+            const hash = window.location.hash || '';
+            const searchParams = new URLSearchParams(search);
+            const searchLang = searchParams.get('lang');
+            if (searchLang) return searchLang;
+
+            const hashQueryIndex = hash.indexOf('?');
+            if (hashQueryIndex >= 0) {
+                const hashParams = new URLSearchParams(hash.substring(hashQueryIndex));
+                return hashParams.get('lang') || '';
+            }
+        } catch (error) {
+            console.warn('[Request] 读取 lang 参数失败:', error);
+        }
+
+        return '';
+    }
 
     /** 初始化基础配置 */
     init(baseURL: string, timeout?: number): void {

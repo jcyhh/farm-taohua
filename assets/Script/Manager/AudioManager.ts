@@ -1,32 +1,40 @@
-import { _decorator, Component, AudioClip, AudioSource } from 'cc';
+import { _decorator, Component, AudioClip, AudioSource, Director, director, resources } from 'cc';
 import { Storage } from '../Utils/Storage';
 
 const { ccclass, property } = _decorator;
 
 const BGM_KEY = 'bgmOn';
 const SFX_KEY = 'sfxOn';
+type AudioKey = 'bgm' | 'click' | 'gold' | 'water' | 'fruit';
+const AUDIO_PATHS: Record<AudioKey, string> = {
+    bgm: 'Audio/bgm',
+    click: 'Audio/click',
+    gold: 'Audio/gold',
+    water: 'Audio/water',
+    fruit: 'Audio/du',
+};
 
 @ccclass('AudioManager')
 export class AudioManager extends Component {
-    @property({ type: AudioClip, tooltip: '点击音效' })
-    clickClip: AudioClip | null = null;
-
-    @property({ type: AudioClip, tooltip: '金币音效' })
-    goldClip: AudioClip | null = null;
-
-    @property({ type: AudioClip, tooltip: '浇水音效' })
-    waterClip: AudioClip | null = null;
-
-    @property({ type: AudioClip, tooltip: '果实音效' })
-    fruitClip: AudioClip | null = null;
-
-    @property({ type: AudioSource, tooltip: '背景音乐 AudioSource(Play On Awake)' })
-    bgmSource: AudioSource | null = null;
-
     @property({ tooltip: '音效音量' })
     sfxVolume = 1.0;
 
+    private bgmSource: AudioSource | null = null;
     private sfxSource: AudioSource | null = null;
+    private readonly clips: Partial<Record<AudioKey, AudioClip>> = {};
+    private preloadPromise: Promise<void> | null = null;
+    private readonly ensureBgmPlayback = () => {
+        if (!this.bgmSource?.clip) return;
+
+        if (!Storage.getBool(BGM_KEY, true)) {
+            this.bgmSource.pause();
+            return;
+        }
+
+        if (!this.bgmSource.playing) {
+            this.bgmSource.play();
+        }
+    };
 
     private static _instance: AudioManager | null = null;
     static get instance(): AudioManager | null {
@@ -39,41 +47,76 @@ export class AudioManager extends Component {
             return;
         }
         AudioManager._instance = this;
+        director.addPersistRootNode(this.node);
+        director.on(Director.EVENT_AFTER_SCENE_LAUNCH, this.ensureBgmPlayback, this);
 
+        this.bgmSource = this.bgmSource ?? this.getComponent(AudioSource) ?? null;
+        if (this.bgmSource) {
+            this.bgmSource.playOnAwake = false;
+            this.bgmSource.clip = null;
+        }
         this.sfxSource = this.node.addComponent(AudioSource);
-        this.initBgm();
     }
 
     onDestroy() {
         if (AudioManager._instance === this) {
             AudioManager._instance = null;
         }
+        director.off(Director.EVENT_AFTER_SCENE_LAUNCH, this.ensureBgmPlayback, this);
     }
 
-    private initBgm() {
-        if (!this.bgmSource) return;
-
-        if (!Storage.getBool(BGM_KEY, true)) {
-            this.scheduleOnce(() => {
-                this.bgmSource?.stop();
-            }, 0);
+    preloadAudios() {
+        if (this.preloadPromise) {
+            return this.preloadPromise;
         }
+
+        const tasks = Object.keys(AUDIO_PATHS).map((key) => this.loadClip(key as AudioKey));
+        this.preloadPromise = Promise.all(tasks)
+            .then(() => {
+                if (this.bgmSource) {
+                    this.bgmSource.clip = this.clips.bgm ?? null;
+                }
+                this.ensureBgmPlayback();
+            })
+            .catch((error) => {
+                this.preloadPromise = null;
+                throw error;
+            });
+
+        return this.preloadPromise;
+    }
+
+    private loadClip(key: AudioKey) {
+        if (this.clips[key]) {
+            return Promise.resolve(this.clips[key] as AudioClip);
+        }
+
+        return new Promise<AudioClip>((resolve, reject) => {
+            resources.load(AUDIO_PATHS[key], AudioClip, (error, clip) => {
+                if (error || !clip) {
+                    reject(error ?? new Error(`[AudioManager] 音频加载失败: ${key}`));
+                    return;
+                }
+                this.clips[key] = clip;
+                resolve(clip);
+            });
+        });
     }
 
     playClick() {
-        this.playSfx(this.clickClip);
+        this.playSfx(this.clips.click ?? null);
     }
 
     playGold() {
-        this.playSfx(this.goldClip);
+        this.playSfx(this.clips.gold ?? null);
     }
 
     playWater() {
-        this.playSfx(this.waterClip);
+        this.playSfx(this.clips.water ?? null);
     }
 
     playFruit() {
-        this.playSfx(this.fruitClip);
+        this.playSfx(this.clips.fruit ?? null);
     }
 
     playSfx(clip: AudioClip | null) {
@@ -88,10 +131,9 @@ export class AudioManager extends Component {
         if (!this.bgmSource) return;
 
         if (isOn) {
-            this.bgmSource.stop();
             this.bgmSource.play();
         } else {
-            this.bgmSource.stop();
+            this.bgmSource.pause();
         }
     }
 

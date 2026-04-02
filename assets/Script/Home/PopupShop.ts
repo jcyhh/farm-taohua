@@ -85,12 +85,14 @@ export class PopupShop extends Component {
     private toGoodsData(seed: SeedItem): GoodsData {
         const name = seed.seed_name || seed.name || '';
         const cycle = seed.seed_cycle ?? seed.cycle ?? seed.lifecycle ?? '';
+        const stock = seed.stock ?? 0;
         const priceValue = Number(seed.price ?? 0) || 0;
 
         return {
             seedId: Number(seed.seed_id ?? seed.id ?? 0) || 0,
             name,
             dayText: `${cycle}天`,
+            stockText: String(stock),
             priceText: `${priceValue}USDT`,
             priceValue,
             imageUrl: String(seed.seed_img ?? ''),

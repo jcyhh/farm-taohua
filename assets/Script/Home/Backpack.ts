@@ -1,9 +1,10 @@
-import { _decorator, assetManager, Component, ImageAsset, instantiate, Label, Node, Prefab, Sprite, SpriteFrame, Texture2D, tween, Vec3 } from 'cc';
+import { _decorator, Component, instantiate, Label, Node, Prefab, Sprite, tween, Vec3 } from 'cc';
 import { Api, LandListItem, LandSowParams, LandSowResponse, MySeedItem } from '../Config/Api';
 import { Toast } from '../Common/Toast';
 import { AudioManager } from '../Manager/AudioManager';
 import { PopupPicker } from './PopupPicker';
 import { Land } from '../Prefab/Land';
+import { RemoteSpriteCache } from '../Utils/RemoteSpriteCache';
 import { Storage } from '../Utils/Storage';
 
 const { ccclass, property } = _decorator;
@@ -11,7 +12,6 @@ const { ccclass, property } = _decorator;
 @ccclass('Backpack')
 export class Backpack extends Component {
     private static _instance: Backpack | null = null;
-    private static readonly imageCache = new Map<string, SpriteFrame>();
 
     @property({ type: Prefab, tooltip: '背包种子预设体' })
     bagSeedPrefab: Prefab | null = null;
@@ -186,44 +186,19 @@ export class Backpack extends Component {
     }
 
     private async loadRemoteSprite(sprite: Sprite | null, url: string) {
-        if (!sprite) return;
+        if (!sprite?.isValid) return;
 
         if (!url) {
             sprite.spriteFrame = null;
             return;
         }
 
-        const cachedFrame = Backpack.imageCache.get(url);
-        if (cachedFrame) {
-            sprite.spriteFrame = cachedFrame;
-            return;
-        }
-
         try {
-            const imageAsset = await this.loadRemoteImage(url);
-            if (!imageAsset) return;
-
-            const texture = new Texture2D();
-            texture.image = imageAsset;
-
-            const spriteFrame = new SpriteFrame();
-            spriteFrame.texture = texture;
-            Backpack.imageCache.set(url, spriteFrame);
+            const spriteFrame = await RemoteSpriteCache.load(url);
+            if (!spriteFrame?.isValid || !sprite?.isValid) return;
             sprite.spriteFrame = spriteFrame;
         } catch (error) {
             console.error(`[Backpack] 加载种子图片失败: ${url}`, error);
         }
-    }
-
-    private loadRemoteImage(url: string): Promise<ImageAsset | null> {
-        return new Promise((resolve, reject) => {
-            assetManager.loadRemote<ImageAsset>(url, (error, imageAsset) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve(imageAsset ?? null);
-            });
-        });
     }
 }

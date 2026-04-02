@@ -27,8 +27,8 @@ export class ButtonClick extends Component {
     }
 
     onDestroy() {
-        this.node.off(Node.EventType.TOUCH_END, this.onClickUp, this);
-        this.node.off(Node.EventType.TOUCH_CANCEL, this.onClickCancel, this);
+        this.safeOff(this.node, Node.EventType.TOUCH_END, this.onClickUp);
+        this.safeOff(this.node, Node.EventType.TOUCH_CANCEL, this.onClickCancel);
     }
 
     private onClickUp() {
@@ -64,5 +64,13 @@ export class ButtonClick extends Component {
         tween(this.node).stop();
         this.node.setScale(this.originScale);
         this.isTweening = false;
+    }
+
+    private safeOff(node: Node | null | undefined, eventType: string, callback: (...args: any[]) => void) {
+        const target = node as any;
+        if (!target?.isValid || !target._eventProcessor) {
+            return;
+        }
+        target.off(eventType, callback, this);
     }
 }

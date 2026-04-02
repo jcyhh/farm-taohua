@@ -2,6 +2,7 @@ import { _decorator, Component, Label, Node, Sprite, SpriteFrame, tween, Vec3 } 
 import { Api, UserProfile } from '../Config/Api';
 import { formatAmount } from '../Utils/Format';
 import { AppBridge } from '../Utils/AppBridge';
+import { Log } from '../Log/Log';
 const { ccclass } = _decorator;
 
 @ccclass('UiHeadbar')
@@ -55,6 +56,10 @@ export class UiHeadbar extends Component {
 
     onQuit() {
         AppBridge.postMessage('navBack', '')
+    }
+
+    onOpenLog(_event?: Event, type?: string) {
+        Log.open(type);
     }
 
     static get currentUser(): UserProfile | null {

@@ -58,8 +58,8 @@ export class Count extends Component {
     }
 
     onDestroy() {
-        this.numEditBox?.node.off(EditBox.EventType.TEXT_CHANGED, this.onEditBoxChanged, this);
-        this.numEditBox?.node.off(EditBox.EventType.EDITING_DID_ENDED, this.onEditBoxEditEnd, this);
+        this.safeOff(this.numEditBox?.node, EditBox.EventType.TEXT_CHANGED, this.onEditBoxChanged);
+        this.safeOff(this.numEditBox?.node, EditBox.EventType.EDITING_DID_ENDED, this.onEditBoxEditEnd);
     }
 
     onSub() {
@@ -131,5 +131,13 @@ export class Count extends Component {
             }
         }
         return this._value;
+    }
+
+    private safeOff(node: Node | null | undefined, eventType: string, callback: (...args: any[]) => void) {
+        const target = node as any;
+        if (!target?.isValid || !target._eventProcessor) {
+            return;
+        }
+        target.off(eventType, callback, this);
     }
 }

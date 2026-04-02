@@ -1,4 +1,5 @@
-import { _decorator, assetManager, Component, ImageAsset, Label, Node, Sprite, SpriteFrame, Texture2D } from 'cc';
+import { _decorator, Component, Label, Node, Sprite } from 'cc';
+import { RemoteSpriteCache } from '../Utils/RemoteSpriteCache';
 
 const { ccclass, property } = _decorator;
 
@@ -6,6 +7,7 @@ export interface GoodsData {
     seedId: number;
     name: string;
     dayText: string;
+    stockText: string;
     priceText: string;
     priceValue: number;
     imageUrl: string;
@@ -22,6 +24,9 @@ export class ShopGoods extends Component {
     @property({ type: Label, tooltip: '天数文本' })
     dayLabel: Label | null = null;
 
+    @property({ type: Label, tooltip: '库存文本' })
+    stockLabel: Label | null = null;
+
     @property({ type: Node, tooltip: '购买按钮' })
     buyBtn: Node | null = null;
 
@@ -30,12 +35,12 @@ export class ShopGoods extends Component {
 
     private _data: GoodsData | null = null;
     private _onBuy: ((data: GoodsData) => void) | null = null;
-    private static readonly imageCache = new Map<string, SpriteFrame>();
 
     onLoad() {
         this.nameLabel = this.nameLabel ?? this.node.getChildByName('name')?.getComponent(Label) ?? null;
         this.goodsSprite = this.goodsSprite ?? this.node.getChildByPath('img/goods')?.getComponent(Sprite) ?? null;
         this.dayLabel = this.dayLabel ?? this.node.getChildByName('day')?.getComponent(Label) ?? null;
+        this.stockLabel = this.stockLabel ?? this.node.getChildByName('stock')?.getComponent(Label) ?? null;
         this.buyBtn = this.buyBtn ?? this.node.getChildByName('btn') ?? null;
         this.buyBtnLabel = this.buyBtnLabel ?? this.node.getChildByPath('btn/Label')?.getComponent(Label) ?? null;
 
@@ -48,12 +53,13 @@ export class ShopGoods extends Component {
 
         if (this.nameLabel) this.nameLabel.string = data.name;
         if (this.dayLabel) this.dayLabel.string = data.dayText;
+        if (this.stockLabel) this.stockLabel.string = data.stockText;
         if (this.buyBtnLabel) this.buyBtnLabel.string = data.priceText;
         void this.loadGoodsImage(data.imageUrl);
     }
 
     onDestroy() {
-        this.buyBtn?.off(Node.EventType.TOUCH_END, this.onBuyClick, this);
+        this.safeOff(this.buyBtn, Node.EventType.TOUCH_END, this.onBuyClick);
     }
 
     private onBuyClick() {
@@ -62,45 +68,28 @@ export class ShopGoods extends Component {
         }
     }
 
+    private safeOff(node: Node | null | undefined, eventType: string, callback: (...args: any[]) => void) {
+        const target = node as any;
+        if (!target?.isValid || !target._eventProcessor) {
+            return;
+        }
+        target.off(eventType, callback, this);
+    }
+
     private async loadGoodsImage(url: string) {
-        if (!this.goodsSprite) return;
+        if (!this.goodsSprite?.isValid) return;
 
         if (!url) {
             this.goodsSprite.spriteFrame = null;
             return;
         }
 
-        const cachedFrame = ShopGoods.imageCache.get(url);
-        if (cachedFrame) {
-            this.goodsSprite.spriteFrame = cachedFrame;
-            return;
-        }
-
         try {
-            const imageAsset = await this.loadRemoteImage(url);
-            if (!imageAsset) return;
-
-            const texture = new Texture2D();
-            texture.image = imageAsset;
-
-            const spriteFrame = new SpriteFrame();
-            spriteFrame.texture = texture;
-            ShopGoods.imageCache.set(url, spriteFrame);
+            const spriteFrame = await RemoteSpriteCache.load(url);
+            if (!spriteFrame?.isValid || !this.goodsSprite?.isValid || this._data?.imageUrl !== url) return;
             this.goodsSprite.spriteFrame = spriteFrame;
         } catch (error) {
             console.error(`[ShopGoods] 加载商品图片失败: ${url}`, error);
         }
-    }
-
-    private loadRemoteImage(url: string): Promise<ImageAsset | null> {
-        return new Promise((resolve, reject) => {
-            assetManager.loadRemote<ImageAsset>(url, (error, imageAsset) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve(imageAsset ?? null);
-            });
-        });
     }
 }

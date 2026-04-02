@@ -20,6 +20,7 @@ export interface SeedItem {
     seed_img?: string;
     seed_cycle?: number | string;
     cycle?: number | string;
+    stock?: number | string;
     price?: number | string;
     lifecycle?: string | number;
     [key: string]: any;
@@ -52,6 +53,49 @@ export interface ExchangeParams {
 }
 
 export interface SignInfo {
+    gift_cycle?: number | string;
+    gift_amount?: number | string;
+    seed_cycle?: number | string;
+    gift_limit?: number | string;
+    [key: string]: any;
+}
+
+/** POST /api/sign 请求体：timestamp、sign、stepCount 均来自链接（AppBridge） */
+export interface SignRequestBody {
+    timestamp: string;
+    sign: string;
+    steps: number;
+}
+
+export interface BalanceLogItem {
+    id?: number;
+    remark?: string;
+    note?: string;
+    title?: string;
+    content?: string;
+    amount?: number | string;
+    value?: number | string;
+    change_amount?: number | string;
+    created_at?: string;
+    create_time?: string;
+    time?: string;
+    [key: string]: any;
+}
+
+export interface BalanceLogParams {
+    ccy: 'balance_fruit' | 'balance_spring_water';
+    page_no: number;
+    page_size: number;
+}
+
+export interface BalanceLogResponse {
+    data?: BalanceLogItem[] | { list?: BalanceLogItem[]; logs?: BalanceLogItem[]; items?: BalanceLogItem[] };
+    list?: BalanceLogItem[];
+    logs?: BalanceLogItem[];
+    items?: BalanceLogItem[];
+    total?: number | string;
+    page_no?: number | string;
+    page_size?: number | string;
     [key: string]: any;
 }
 
@@ -132,6 +176,11 @@ export class Api {
         return http.get<UserProfile>('/api/users/my');
     }
 
+    /** GET /api/users/my/balance_logs 获取资产明细列表 */
+    static userBalanceLogs(params: BalanceLogParams): Promise<BalanceLogResponse> {
+        return http.get('/api/users/my/balance_logs', params);
+    }
+
     /** GET /api/notices 获取公告列表 */
     static notices(): Promise<
         NoticeItem[] | { notices?: NoticeItem[]; list?: NoticeItem[]; data?: NoticeItem[] | { list?: NoticeItem[] } }
@@ -203,8 +252,8 @@ export class Api {
         return http.get('/api/sign/info');
     }
 
-    /** POST /api/sign 执行签到 */
-    static sign(): Promise<Record<string, any>> {
-        return http.post('/api/sign');
+    /** POST /api/sign 执行签到，body: { timestamp, sign, steps }（steps 为链接参数 stepCount 的数值） */
+    static sign(data: SignRequestBody): Promise<Record<string, any>> {
+        return http.post('/api/sign', data);
     }
 }
