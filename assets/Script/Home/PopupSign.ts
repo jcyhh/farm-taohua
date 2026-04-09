@@ -73,7 +73,7 @@ export class PopupSign extends Component {
             this.statsLabel.string = t('已连续签到{days}天', { days: continuousDays });
         }
         if (this.progressLabel) {
-            this.progressLabel.string = t('今日徒步{stepCount}/{signSteps}km', { stepCount, signSteps });
+            this.progressLabel.string = t('今日徒步{stepCount}/{signSteps}m', { stepCount, signSteps });
         }
         if (this.buttonLabel) {
             this.buttonLabel.string = signedToday ? t('已签到') : t('签到');

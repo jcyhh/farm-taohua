@@ -34,26 +34,26 @@
         "__id__": 36
       },
       {
-        "__id__": 44
+        "__id__": 42
       },
       {
-        "__id__": 50
+        "__id__": 48
       }
     ],
     "_active": true,
     "_components": [
       {
+        "__id__": 65
+      },
+      {
         "__id__": 67
       },
       {
         "__id__": 69
-      },
-      {
-        "__id__": 71
       }
     ],
     "_prefab": {
-      "__id__": 73
+      "__id__": 71
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -409,7 +409,7 @@
     "_anchorPoint": {
       "__type__": "cc.Vec2",
       "x": 0.5,
-      "y": 0.5
+      "y": 0.45
     },
     "_id": ""
   },
@@ -896,7 +896,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Label-001",
+    "_name": "stock",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -910,13 +910,10 @@
       },
       {
         "__id__": 39
-      },
-      {
-        "__id__": 41
       }
     ],
     "_prefab": {
-      "__id__": 43
+      "__id__": 41
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -1047,24 +1044,6 @@
     "fileId": "57SviW9VJJYpe7TgfCnMUY"
   },
   {
-    "__type__": "2b3b2ccFXdMyIcoBCa9g6Iz",
-    "_name": "",
-    "_objFlags": 0,
-    "__editorExtras__": {},
-    "node": {
-      "__id__": 36
-    },
-    "_enabled": true,
-    "__prefab": {
-      "__id__": 42
-    },
-    "_id": ""
-  },
-  {
-    "__type__": "cc.CompPrefabInfo",
-    "fileId": "283GzX9vBG+pUcVqgkOk1e"
-  },
-  {
     "__type__": "cc.PrefabInfo",
     "root": {
       "__id__": 1
@@ -1079,7 +1058,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "stock",
+    "_name": "land",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -1089,14 +1068,14 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 45
+        "__id__": 43
       },
       {
-        "__id__": 47
+        "__id__": 45
       }
     ],
     "_prefab": {
-      "__id__": 49
+      "__id__": 47
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -1133,11 +1112,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 44
+      "__id__": 42
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 46
+      "__id__": 44
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -1161,11 +1140,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 44
+      "__id__": 42
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 48
+      "__id__": 46
     },
     "_customMaterial": {
       "__uuid__": "504e52b7-6b08-4655-982f-24eae473c4ed",
@@ -1249,11 +1228,14 @@
     },
     "_children": [
       {
-        "__id__": 51
+        "__id__": 49
       }
     ],
     "_active": true,
     "_components": [
+      {
+        "__id__": 55
+      },
       {
         "__id__": 57
       },
@@ -1262,13 +1244,10 @@
       },
       {
         "__id__": 61
-      },
-      {
-        "__id__": 63
       }
     ],
     "_prefab": {
-      "__id__": 66
+      "__id__": 64
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -1305,20 +1284,20 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
-      "__id__": 50
+      "__id__": 48
     },
     "_children": [],
     "_active": true,
     "_components": [
       {
-        "__id__": 52
+        "__id__": 50
       },
       {
-        "__id__": 54
+        "__id__": 52
       }
     ],
     "_prefab": {
-      "__id__": 56
+      "__id__": 54
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -1355,11 +1334,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 51
+      "__id__": 49
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 53
+      "__id__": 51
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -1383,11 +1362,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 51
+      "__id__": 49
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 55
+      "__id__": 53
     },
     "_customMaterial": {
       "__uuid__": "504e52b7-6b08-4655-982f-24eae473c4ed",
@@ -1467,11 +1446,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 50
+      "__id__": 48
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 58
+      "__id__": 56
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -1495,11 +1474,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 50
+      "__id__": 48
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 60
+      "__id__": 58
     },
     "_customMaterial": null,
     "_srcBlendFactor": 2,
@@ -1540,11 +1519,11 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 50
+      "__id__": 48
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 62
+      "__id__": 60
     },
     "enableAnim": true,
     "scaleDown": 0.85,
@@ -1562,15 +1541,15 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 50
+      "__id__": 48
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 64
+      "__id__": 62
     },
     "clickEvents": [
       {
-        "__id__": 65
+        "__id__": 63
       }
     ],
     "_interactable": true,
@@ -1610,7 +1589,7 @@
     "_duration": 0.1,
     "_zoomScale": 1.2,
     "_target": {
-      "__id__": 50
+      "__id__": 48
     },
     "_id": ""
   },
@@ -1651,7 +1630,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 68
+      "__id__": 66
     },
     "_contentSize": {
       "__type__": "cc.Size",
@@ -1679,7 +1658,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 70
+      "__id__": 68
     },
     "_customMaterial": null,
     "_srcBlendFactor": 2,
@@ -1724,7 +1703,7 @@
     },
     "_enabled": true,
     "__prefab": {
-      "__id__": 72
+      "__id__": 70
     },
     "nameLabel": {
       "__id__": 5
@@ -1732,8 +1711,9 @@
     "goodsSprite": null,
     "dayLabel": null,
     "stockLabel": null,
+    "landLabel": null,
     "buyBtn": {
-      "__id__": 50
+      "__id__": 48
     },
     "buyBtnLabel": null,
     "_id": ""

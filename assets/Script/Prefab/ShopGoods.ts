@@ -1,4 +1,5 @@
 import { _decorator, Component, Label, Node, Sprite } from 'cc';
+import { t } from '../Config/I18n';
 import { RemoteSpriteCache } from '../Utils/RemoteSpriteCache';
 
 const { ccclass, property } = _decorator;
@@ -15,6 +16,8 @@ export interface GoodsData {
 
 @ccclass('ShopGoods')
 export class ShopGoods extends Component {
+    private static readonly LAND_NAME_KEYS = ['沙土地', '褐土地', '金土地', '红土地', '黑土地'];
+
     @property({ type: Label, tooltip: '商品名称' })
     nameLabel: Label | null = null;
 
@@ -26,6 +29,9 @@ export class ShopGoods extends Component {
 
     @property({ type: Label, tooltip: '库存文本' })
     stockLabel: Label | null = null;
+
+    @property({ type: Label, tooltip: '土地文本' })
+    landLabel: Label | null = null;
 
     @property({ type: Node, tooltip: '购买按钮' })
     buyBtn: Node | null = null;
@@ -41,6 +47,7 @@ export class ShopGoods extends Component {
         this.goodsSprite = this.goodsSprite ?? this.node.getChildByPath('img/goods')?.getComponent(Sprite) ?? null;
         this.dayLabel = this.dayLabel ?? this.node.getChildByName('day')?.getComponent(Label) ?? null;
         this.stockLabel = this.stockLabel ?? this.node.getChildByName('stock')?.getComponent(Label) ?? null;
+        this.landLabel = this.landLabel ?? this.node.getChildByName('land')?.getComponent(Label) ?? null;
         this.buyBtn = this.buyBtn ?? this.node.getChildByName('btn') ?? null;
         this.buyBtnLabel = this.buyBtnLabel ?? this.node.getChildByPath('btn/Label')?.getComponent(Label) ?? null;
 
@@ -53,7 +60,8 @@ export class ShopGoods extends Component {
 
         if (this.nameLabel) this.nameLabel.string = data.name;
         if (this.dayLabel) this.dayLabel.string = data.dayText;
-        if (this.stockLabel) this.stockLabel.string = data.stockText;
+        if (this.stockLabel) this.stockLabel.string = `${t('库存')} ${data.stockText}`;
+        if (this.landLabel) this.landLabel.string = this.getLandName(data.seedId);
         if (this.buyBtnLabel) this.buyBtnLabel.string = data.priceText;
         void this.loadGoodsImage(data.imageUrl);
     }
@@ -74,6 +82,12 @@ export class ShopGoods extends Component {
             return;
         }
         target.off(eventType, callback, this);
+    }
+
+    private getLandName(seedId: number) {
+        const normalizedSeedId = Number(seedId);
+        const landKey = ShopGoods.LAND_NAME_KEYS[normalizedSeedId - 1] ?? ShopGoods.LAND_NAME_KEYS[0];
+        return t(landKey);
     }
 
     private async loadGoodsImage(url: string) {
