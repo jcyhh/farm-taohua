@@ -1,5 +1,6 @@
 import { _decorator, Color, Component, director, instantiate, Label, Node, Prefab, ScrollView } from 'cc';
-import { Api, BalanceLogItem, BalanceLogResponse } from '../Config/Api';
+import { Api, TreeBattleRecordsResponse } from '../Config/Api';
+import { t } from '../Config/I18n';
 import { formatAmount } from '../Utils/Format';
 const { ccclass, property } = _decorator;
 
@@ -64,24 +65,21 @@ export class Log extends Component {
     private async loadNextPage() {
         if (this.loading || !this.hasMore) return;
 
-        const ccy = this.getRequestCcy();
-        if (!ccy) return;
-
         this.loading = true;
         try {
-            const response = await Api.userBalanceLogs({
-                ccy,
+            const response = await Api.treeBattleRecords({
                 page_no: this.pageNo,
                 page_size: this.pageSize,
             });
-            const list = this.pickLogList(response);
+            console.log('[Log] 对战记录返回:', response);
+            const list = this.pickTreeBattleRecordList(response);
             this.renderList(list);
             this.hasMore = this.pickHasMore(response, list.length);
             if (list.length > 0) {
                 this.pageNo += 1;
             }
         } catch (error) {
-            console.error('[Log] 获取资产明细失败:', error);
+            console.error('[Log] 获取对战记录失败:', error);
         } finally {
             this.loading = false;
         }
@@ -98,54 +96,23 @@ export class Log extends Component {
         }
     }
 
-    private getRequestCcy(): 'balance_fruit' | 'balance_spring_water' {
-        return Log.getPendingType() === 2 ? 'balance_spring_water' : 'balance_fruit';
-    }
-
-    private pickLogList(response: BalanceLogResponse | BalanceLogItem[]): BalanceLogItem[] {
+    private pickTreeBattleRecordList(response: TreeBattleRecordsResponse | Record<string, any>[]) {
         if (Array.isArray(response)) {
             return response;
         }
-
-        if (Array.isArray((response as any).asset_logs)) {
-            return (response as any).asset_logs;
-        }
-
         if (Array.isArray(response.list)) {
             return response.list;
         }
-
-        if (Array.isArray(response.logs)) {
-            return response.logs;
-        }
-
-        if (Array.isArray(response.items)) {
-            return response.items;
-        }
-
         if (Array.isArray(response.data)) {
             return response.data;
         }
-
-        if (response.data && !Array.isArray(response.data)) {
-            if (Array.isArray((response.data as any).asset_logs)) {
-                return (response.data as any).asset_logs;
-            }
-            if (Array.isArray(response.data.list)) {
-                return response.data.list;
-            }
-            if (Array.isArray(response.data.logs)) {
-                return response.data.logs;
-            }
-            if (Array.isArray(response.data.items)) {
-                return response.data.items;
-            }
+        if (response.data && !Array.isArray(response.data) && Array.isArray(response.data.list)) {
+            return response.data.list;
         }
-
         return [];
     }
 
-    private pickHasMore(response: BalanceLogResponse, currentSize: number) {
+    private pickHasMore(response: TreeBattleRecordsResponse, currentSize: number) {
         if (currentSize < this.pageSize) {
             return false;
         }
@@ -158,7 +125,7 @@ export class Log extends Component {
         return currentSize >= this.pageSize;
     }
 
-    private renderList(list: BalanceLogItem[]) {
+    private renderList(list: Record<string, any>[]) {
         if (!this.contentNode || !this.itemPrefab || list.length === 0) return;
 
         for (const item of list) {
@@ -169,59 +136,83 @@ export class Log extends Component {
         }
     }
 
-    private fillItem(node: Node, item: BalanceLogItem) {
-        const remarkLabel = node.getChildByName('remark')?.getComponent(Label)
-            ?? node.getChildByName('Label')?.getComponent(Label)
-            ?? null;
-        const amountLabel = node.getChildByName('amount')?.getComponent(Label)
-            ?? node.getChildByName('Label-001')?.getComponent(Label)
-            ?? null;
-        const timeLabel = node.getChildByName('time')?.getComponent(Label)
-            ?? node.getChildByName('Label-002')?.getComponent(Label)
+    private fillItem(node: Node, item: Record<string, any>) {
+        const myLabel = node.getChildByName('my')?.getComponent(Label) ?? null;
+        const otherLabel = node.getChildByName('other')?.getComponent(Label) ?? null;
+        const myPowerLabel = node.getChildByName('myPower')?.getComponent(Label) ?? null;
+        const otherPowerLabel = node.getChildByName('otherPower')?.getComponent(Label) ?? null;
+        const myAmountLabel = node.getChildByName('myAmount')?.getComponent(Label) ?? null;
+        const otherAmountLabel = node.getChildByPath('otherAmount/Label')?.getComponent(Label) ?? null;
+        const timeLabel = node.getChildByName('time')?.getComponent(Label) ?? null;
+        const failNode = node.getChildByName('fail');
+        const successNode = node.getChildByName('success');
+        const failLabel = failNode?.getComponent(Label)
+            ?? failNode?.getChildByName('Label')?.getComponent(Label)
             ?? null;
 
-        if (remarkLabel) {
-            remarkLabel.string = this.getRemarkText(item);
+        const me = this.pickObject(item.me);
+        const opponent = this.pickObject(item.opponent);
+        const winner = Number(item.winner);
+
+        if (myLabel) {
+            myLabel.string = String(me?.mphone ?? '');
         }
-        if (amountLabel) {
-            amountLabel.string = this.getAmountText(item);
-            amountLabel.color = this.isIncrease(item) ? Log.INCREASE_COLOR : Log.DECREASE_COLOR;
+        if (otherLabel) {
+            otherLabel.string = String(opponent?.mphone ?? '');
+        }
+        if (myPowerLabel) {
+            myPowerLabel.string = this.getPowerText(me?.spirits);
+        }
+        if (otherPowerLabel) {
+            otherPowerLabel.string = this.getPowerText(opponent?.spirits);
+        }
+        if (myAmountLabel) {
+            myAmountLabel.string = this.getIncomeText(me?.income);
+        }
+        if (otherAmountLabel) {
+            otherAmountLabel.string = this.getIncomeText(opponent?.income);
         }
         if (timeLabel) {
-            timeLabel.string = this.getTimeText(item);
+            timeLabel.string = String(item.created_at ?? '');
+        }
+
+        if (successNode) {
+            successNode.active = winner === 1;
+        }
+        if (failNode) {
+            failNode.active = winner === 0 || winner === 2;
+        }
+        if (failLabel) {
+            failLabel.string = winner === 0 ? t('平局') : t('失败');
         }
     }
 
-    private getRemarkText(item: BalanceLogItem) {
-        return String(
-            item.remark
-            ?? item.note
-            ?? item.title
-            ?? item.content
-            ?? item.desc
-            ?? '--',
-        );
+    private getPowerText(spirits: any) {
+        return t('战力 {spirits}', {
+            spirits: Array.isArray(spirits) ? spirits.join() : '',
+        });
     }
 
-    private getAmountText(item: BalanceLogItem) {
-        const raw = item.amount ?? item.change_amount ?? item.value ?? item.num ?? 0;
-        const num = Number(raw);
-        if (!Number.isFinite(num)) {
-            return String(raw ?? '0');
+    private getIncomeText(value: number | string | undefined) {
+        const amount = Number(value);
+        if (!Number.isFinite(amount)) {
+            return String(value ?? '0');
         }
-
-        const absText = formatAmount(Math.abs(num));
-        if (this.isIncrease(item)) return `+${absText}`;
-        if (num !== 0) return `-${absText}`;
+        const amountText = formatAmount(Math.abs(amount));
+        if (amount > 0) {
+            return `+${amountText}`;
+        }
+        if (amount < 0) {
+            return `-${amountText}`;
+        }
         return '0';
     }
 
-    private getTimeText(item: BalanceLogItem) {
-        return String(item.created_at ?? item.create_time ?? item.time ?? item.updated_at ?? '');
-    }
-
-    private isIncrease(item: BalanceLogItem) {
-        return Number((item as any).is_inc ?? 0) === 1;
+    private pickObject(value: any) {
+        if (!value || Array.isArray(value) || typeof value !== 'object') {
+            return null;
+        }
+        return value as Record<string, any>;
     }
 
     private clearList() {

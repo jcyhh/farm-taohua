@@ -5,13 +5,20 @@ const { ccclass, property } = _decorator;
 
 const BGM_KEY = 'bgmOn';
 const SFX_KEY = 'sfxOn';
-type AudioKey = 'bgm' | 'click' | 'gold' | 'water' | 'fruit';
+type AudioKey = 'bgm' | 'click' | 'gold' | 'fruit' | 'open' | 'upgrade' | 'upgrade1' | 'upgrade2' | 'attack' | 'win' | 'fail' | 'draw';
 const AUDIO_PATHS: Record<AudioKey, string> = {
     bgm: 'Audio/bgm',
     click: 'Audio/click',
     gold: 'Audio/gold',
-    water: 'Audio/water',
     fruit: 'Audio/du',
+    open: 'Audio/open',
+    upgrade: 'Audio/upgrade',
+    upgrade1: 'Audio/upgrade1',
+    upgrade2: 'Audio/upgrade2',
+    attack: 'Audio/attack',
+    win: 'Audio/win',
+    fail: 'Audio/fail',
+    draw: 'Audio/draw',
 };
 
 @ccclass('AudioManager')
@@ -111,12 +118,40 @@ export class AudioManager extends Component {
         this.playSfx(this.clips.gold ?? null);
     }
 
-    playWater() {
-        this.playSfx(this.clips.water ?? null);
-    }
-
     playFruit() {
         this.playSfx(this.clips.fruit ?? null);
+    }
+
+    playOpen() {
+        this.playSfx(this.clips.open ?? null);
+    }
+
+    playUpgrade() {
+        this.playSfx(this.clips.upgrade ?? null);
+    }
+
+    playUpgrade1() {
+        this.playSfx(this.clips.upgrade1 ?? null);
+    }
+
+    playUpgrade2() {
+        this.playSfx(this.clips.upgrade2 ?? null);
+    }
+
+    playAttack() {
+        this.playSfx(this.clips.attack ?? null);
+    }
+
+    playWin() {
+        this.playSfx(this.clips.win ?? null);
+    }
+
+    playFail() {
+        this.playSfx(this.clips.fail ?? null);
+    }
+
+    playDraw() {
+        this.playSfx(this.clips.draw ?? null);
     }
 
     playSfx(clip: AudioClip | null) {

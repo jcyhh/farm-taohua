@@ -1,8 +1,10 @@
-import { _decorator, Component, Label, Node, Sprite, SpriteFrame, tween, Vec3 } from 'cc';
-import { Api, UserProfile } from '../Config/Api';
+import { _decorator, Component, director, Label, Node, Sprite, SpriteFrame, tween, Vec3 } from 'cc';
+import { UserProfile } from '../Config/Api';
 import { formatAmount } from '../Utils/Format';
 import { AppBridge } from '../Utils/AppBridge';
 import { Log } from '../Log/Log';
+import { BattleStepFlow, BATTLE_HEADBAR_QUIT_EVENT } from './BattleStepFlow';
+import { UserProfileStore } from './UserProfileStore';
 const { ccclass } = _decorator;
 
 @ccclass('UiHeadbar')
@@ -18,6 +20,7 @@ export class UiHeadbar extends Component {
     private fairyStoneLabel: Label | null = null;
     private usdtLabel: Label | null = null;
     private fruitIconScale = new Vec3(1, 1, 1);
+    private unsubscribeUserProfile: (() => void) | null = null;
 
     onLoad() {
         UiHeadbar._instance = this;
@@ -42,20 +45,38 @@ export class UiHeadbar extends Component {
             'asset-001/assetUsdt/Label',
             'asset/assetUsdt/Label',
         ]);
+        this.unsubscribeUserProfile = UserProfileStore.subscribe((userInfo) => {
+            UiHeadbar._currentUser = userInfo;
+            this.applyUserInfo(userInfo);
+        });
+        const cachedUser = UserProfileStore.getCurrentUser();
+        if (cachedUser) {
+            UiHeadbar._currentUser = cachedUser;
+            this.applyUserInfo(cachedUser);
+        }
     }
 
     onDestroy() {
         if (UiHeadbar._instance === this) {
             UiHeadbar._instance = null;
         }
+        this.unsubscribeUserProfile?.();
+        this.unsubscribeUserProfile = null;
     }
 
     async start() {
+        if (BattleStepFlow.current?.isStep1Active()) {
+            return;
+        }
         await UiHeadbar.refreshUserInfo();
     }
 
     onQuit() {
-        AppBridge.postMessage('navBack', '')
+        if (BattleStepFlow.current?.isStep1Active()) {
+            AppBridge.postMessage('navBack', '');
+            return;
+        }
+        director.emit(BATTLE_HEADBAR_QUIT_EVENT);
     }
 
     onOpenLog(_event?: Event, type?: string) {
@@ -88,9 +109,8 @@ export class UiHeadbar extends Component {
 
     static async refreshUserInfo(): Promise<UserProfile | null> {
         try {
-            const userInfo = await Api.userMy();
+            const userInfo = await UserProfileStore.refresh();
             this._currentUser = userInfo;
-            this._instance?.applyUserInfo(userInfo);
             return userInfo;
         } catch (error) {
             this._currentUser = null;
@@ -127,27 +147,21 @@ export class UiHeadbar extends Component {
 
     private getNodeByPaths(paths: string[]): Node | null {
         for (const path of paths) {
-            const target = this.getNodeByPath(path, false);
+            const target = this.getNodeByPath(path);
             if (target) {
                 return target;
             }
         }
-        if (paths.length > 0) {
-            console.warn(`[UiHeadbar] 未找到任一节点路径: ${paths.join(' | ')}`);
-        }
         return null;
     }
 
-    private getNodeByPath(path: string, logMissing = true): Node | null {
+    private getNodeByPath(path: string): Node | null {
         const names = path.split('/').filter(Boolean);
         let current: Node | null = this.node;
 
         for (const name of names) {
             current = current?.getChildByName(name) ?? null;
             if (!current) {
-                if (logMissing) {
-                    console.warn(`[UiHeadbar] 未找到节点路径: ${path}`);
-                }
                 return null;
             }
         }

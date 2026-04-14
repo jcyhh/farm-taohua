@@ -8,6 +8,7 @@ export class Header extends Component {
     private titleLabel: Label | null = null;
 
     onLoad() {
+        director.preloadScene('Home');
         this.titleLabel = this.node.getChildByName('Label')?.getComponent(Label) ?? null;
         this.refreshTitle(Log.getPendingType());
     }

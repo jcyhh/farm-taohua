@@ -1,6 +1,5 @@
 import { _decorator, Component, Node, tween, Vec3 } from 'cc';
 import { AudioManager } from '../Manager/AudioManager';
-import { Land } from '../Prefab/Land';
 
 const { ccclass, property } = _decorator;
 
@@ -49,8 +48,6 @@ export class Popup extends Component {
         if (!this.content) return;
 
         this.resetPopupState();
-
-        Land.deselectCurrent();
 
         this.setParentMaskActive(false);
 

@@ -168,12 +168,150 @@ export interface UserProfile {
     [key: string]: any;
 }
 
+export type TreeBattleAmountValue = number | string;
+
+export interface TreeBattleAmountResponse {
+    amount?: TreeBattleAmountValue | TreeBattleAmountValue[];
+    list?: TreeBattleAmountValue[];
+    data?: TreeBattleAmountValue[] | { list?: TreeBattleAmountValue[]; amount?: TreeBattleAmountValue | TreeBattleAmountValue[] };
+    [key: string]: any;
+}
+
+export interface TreeBattleInviteParams {
+    phone: string;
+    amount: number;
+}
+
+export interface TreeBattleInviteResponse {
+    invite_id?: number;
+    invitee_phone?: string;
+    amount?: number | string;
+    expired_at?: string;
+    balance_fairy_stone?: number | string;
+    [key: string]: any;
+}
+
+export interface TreeBattleInviteCancelResponse {
+    [key: string]: any;
+}
+
+export interface TreeBattleInviteAcceptResponse {
+    [key: string]: any;
+}
+
+export interface TreeBattleInviteRejectResponse {
+    [key: string]: any;
+}
+
+export interface TreeBattleInviteReceivedItem {
+    id?: number;
+    inviter_phone?: string;
+    amount?: number | string;
+    remaining_seconds?: number;
+    expired_at?: string;
+    created_at?: string;
+    [key: string]: any;
+}
+
+export interface TreeBattleInviteReceivedResponse {
+    list?: TreeBattleInviteReceivedItem[];
+    data?: TreeBattleInviteReceivedItem[] | { list?: TreeBattleInviteReceivedItem[] };
+    [key: string]: any;
+}
+
+export interface TreeBattleInvitePollResponse {
+    status?: number;
+    invite_id?: number;
+    amount?: number | string;
+    game?: Record<string, any>;
+    data?: {
+        status?: number;
+        invite_id?: number;
+        amount?: number | string;
+        game?: Record<string, any>;
+        [key: string]: any;
+    };
+    [key: string]: any;
+}
+
+export interface TreeBattleFightParams {
+    amount: number;
+}
+
+export interface TreeBattleFightResponse {
+    game?: Record<string, any>;
+    data?: {
+        game?: Record<string, any>;
+        [key: string]: any;
+    };
+    [key: string]: any;
+}
+
+export interface TreeBattleRecordsParams {
+    page_no: number;
+    page_size: number;
+}
+
+export interface TreeBattleRecordsResponse {
+    list?: Record<string, any>[];
+    data?: Record<string, any>[] | { list?: Record<string, any>[]; [key: string]: any };
+    total?: number | string;
+    page_no?: number | string;
+    page_size?: number | string;
+    [key: string]: any;
+}
+
 // ==================== 接口 ====================
 
 export class Api {
     /** GET /api/users/my 获取当前登录用户信息 */
     static userMy(): Promise<UserProfile> {
         return http.get<UserProfile>('/api/users/my');
+    }
+
+    /** GET /api/tree_battle/amount 获取斗法次数/数量 */
+    static treeBattleAmount(): Promise<TreeBattleAmountResponse> {
+        return http.get<TreeBattleAmountResponse>('/api/tree_battle/amount');
+    }
+
+    /** POST /api/tree_battle/invite 发起指定手机号邀请 */
+    static treeBattleInvite(data: TreeBattleInviteParams): Promise<TreeBattleInviteResponse> {
+        return http.post<TreeBattleInviteResponse>('/api/tree_battle/invite', data);
+    }
+
+    /** POST /api/tree_battle/invite/{id}/cancel 取消邀请 */
+    static treeBattleInviteCancel(inviteId: number | string): Promise<TreeBattleInviteCancelResponse> {
+        return http.post<TreeBattleInviteCancelResponse>(`/api/tree_battle/invite/${inviteId}/cancel`);
+    }
+
+    /** POST /api/tree_battle/invite/{id}/accept 接受邀请 */
+    static treeBattleInviteAccept(inviteId: number | string): Promise<TreeBattleInviteAcceptResponse> {
+        return http.post<TreeBattleInviteAcceptResponse>(`/api/tree_battle/invite/${inviteId}/accept`);
+    }
+
+    /** POST /api/tree_battle/invite/{id}/reject 拒绝邀请 */
+    static treeBattleInviteReject(inviteId: number | string): Promise<TreeBattleInviteRejectResponse> {
+        return http.post<TreeBattleInviteRejectResponse>(`/api/tree_battle/invite/${inviteId}/reject`);
+    }
+
+    /** GET /api/tree_battle/invite/received 轮询收到的邀请 */
+    static treeBattleInviteReceived(): Promise<TreeBattleInviteReceivedResponse> {
+        return http.get<TreeBattleInviteReceivedResponse>('/api/tree_battle/invite/received');
+    }
+
+    /** GET /api/tree_battle/invite/{id}/poll 轮询我发起的邀请结果 */
+    static treeBattleInvitePoll(inviteId: number | string): Promise<TreeBattleInvitePollResponse> {
+        return http.get<TreeBattleInvitePollResponse>(`/api/tree_battle/invite/${inviteId}/poll`);
+    }
+
+    /** POST /api/tree_battle/fight 自动匹配机器人并立即出结果 */
+    static treeBattleFight(data: TreeBattleFightParams): Promise<TreeBattleFightResponse> {
+        return http.post<TreeBattleFightResponse>('/api/tree_battle/fight', data);
+    }
+
+    /** GET /api/tree_battle/records 查询历史对战记录 */
+    static treeBattleRecords(params: TreeBattleRecordsParams): Promise<TreeBattleRecordsResponse> {
+        return http.get<TreeBattleRecordsResponse>('/api/tree_battle/records', params);
     }
 
     /** GET /api/users/my/balance_logs 获取资产明细列表 */
