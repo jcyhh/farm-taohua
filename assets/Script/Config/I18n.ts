@@ -107,7 +107,8 @@ const DICTS: Record<LangCode, I18nDict> = {
         '对方手机号': 'Opponent Phone Number',
         '玩家账号': 'Player Account',
         '成功': 'Success',
-        '指定手机号对决': 'Challenge by Phone Number'
+        '指定手机号对决': 'Challenge by Phone Number',
+        '输入对方ID': '输入对方ID'
     },
 };
 

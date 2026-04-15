@@ -7364,7 +7364,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "指定手机号对决",
+    "_string": "指定ID对决",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 48,
@@ -12372,7 +12372,7 @@
       "b": 255,
       "a": 128
     },
-    "_string": "对方手机号",
+    "_string": "输入对方ID",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 32,
