@@ -16352,7 +16352,7 @@
       "b": 26,
       "a": 255
     },
-    "_string": "桃花源正式开启内测阶段 \n现招募体验玩家 连续签到打卡7天\n送体验桃花树10棵 生命周期30天\n限量1999席",
+    "_string": "桃花源正式开启内测阶段 \n现招募体验玩家 连续签到打卡7天\n送体验桃花树10棵 生命周期30天\n限量1999席 已领0",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
     "_actualFontSize": 20,
@@ -16898,7 +16898,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 161.35546875,
+      "width": 149.35546875,
       "height": 50.4
     },
     "_anchorPoint": {

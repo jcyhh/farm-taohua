@@ -35,8 +35,8 @@ const DICTS: Record<LangCode, I18nDict> = {
         '总计 : 0灵石': '總計 : 0靈石',
         '桃花果': '桃花果',
         '≈1灵石': '≈1靈石',
-        '桃花源正式开启内测阶段\n现招募体验玩家 连续签到打卡{gift_cycle}天\n送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n限量{gift_limit}席':
-            '桃花源正式開啟內測階段\n現招募體驗玩家 連續簽到打卡{gift_cycle}天\n送體驗桃花樹{gift_amount}棵 生命週期{seed_cycle}天\n限量{gift_limit}席',
+        '桃花源正式开启内测阶段\n现招募体验玩家 连续签到打卡{gift_cycle}天\n送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n限量{gift_limit}席，已领 {gifted_count}':
+            '桃花源正式開啟內測階段\n現招募體驗玩家 連續簽到打卡{gift_cycle}天\n送體驗桃花樹{gift_amount}棵 生命週期{seed_cycle}天\n限量{gift_limit}席，已領 {gifted_count}',
         '每日签到': '每日簽到',
         '状态': '狀態',
         '00:00:00 后成熟': '00:00:00 後成熟',
@@ -116,8 +116,8 @@ const DICTS: Record<LangCode, I18nDict> = {
         '≈1灵石': '≈1 Fairy Stone',
         '生命周期': 'Lifecycle',
         '库存': 'Stock',
-        '桃花源正式开启内测阶段\n现招募体验玩家 连续签到打卡{gift_cycle}天\n送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n限量{gift_limit}席':
-            'Peach Blossom Spring is now in closed beta.\nWe are recruiting trial players: check in for {gift_cycle} consecutive days.\nReceive {gift_amount} trial peach trees, lifecycle {seed_cycle} days.\nLimited to {gift_limit} spots.',
+        '桃花源正式开启内测阶段\n现招募体验玩家 连续签到打卡{gift_cycle}天\n送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n限量{gift_limit}席，已领 {gifted_count}':
+            'Peach Blossom Spring is now in closed beta.\nWe are recruiting trial players: check in for {gift_cycle} consecutive days.\nReceive {gift_amount} trial peach trees, lifecycle {seed_cycle} days.\nLimited to {gift_limit} spots, claimed {gifted_count}.',
         '每日签到': 'Daily Check-in',
         '状态': 'Status',
         '00:00:00 后成熟': 'Ready in 00:00:00',

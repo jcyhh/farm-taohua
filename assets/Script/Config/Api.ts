@@ -57,6 +57,7 @@ export interface SignInfo {
     gift_amount?: number | string;
     seed_cycle?: number | string;
     gift_limit?: number | string;
+    gifted_count?: number | string;
     [key: string]: any;
 }
 
