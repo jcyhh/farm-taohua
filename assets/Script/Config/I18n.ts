@@ -73,6 +73,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '{time}后成熟': '{time}後成熟',
         '土地状态数据异常': '土地狀態資料異常',
         '浇水成功': '澆水成功',
+        '加速成功': '加速成功',
         '采摘成功': '採摘成功',
         '铲除成功': '鏟除成功',
         '复制成功': '複製成功',
@@ -84,7 +85,9 @@ const DICTS: Record<LangCode, I18nDict> = {
         '{ripeYield}/{countYield}桃花果': '{ripeYield}/{countYield}桃花果',
         'QQ交流8群 541137708': 'QQ交流8群 541137708',
         'QQ交流7群 1063562123': 'QQ交流7群 1063562123',
-        'QQ交流9群 1057507086': 'QQ交流9群 1057507086'
+        'QQ交流9群 1057507086': 'QQ交流9群 1057507086',
+        '加速卡': '加速卡',
+        '适用': '適用'
     },
     en: {
         '沙土地': 'Sandy Land',
@@ -154,6 +157,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '{time}后成熟': 'Ready in {time}',
         '土地状态数据异常': 'Invalid land state data',
         '浇水成功': 'Watering successful',
+        '加速成功': 'Boost successful',
         '采摘成功': 'Harvest successful',
         '铲除成功': 'Clear successful',
         '复制成功': 'Copied successfully',
@@ -164,6 +168,8 @@ const DICTS: Record<LangCode, I18nDict> = {
         'QQ交流8群 541137708': 'QQ Group 8: 541137708',
         'QQ交流7群 1063562123': 'QQ Group 7: 1063562123',
         'QQ交流9群 1057507086': 'QQ Group 9: 1057507086',
+        '加速卡': 'Boost Card',
+        '适用': 'Applicable'
     },
     vi: {
         '沙土地': 'Dat Cat',
@@ -233,6 +239,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '{time}后成熟': 'Chin sau {time}',
         '土地状态数据异常': 'Du lieu trang thai dat bat thuong',
         '浇水成功': 'Tuoi nuoc thanh cong',
+        '加速成功': 'Tang toc thanh cong',
         '采摘成功': 'Thu hoach thanh cong',
         '铲除成功': 'Don dep thanh cong',
         '复制成功': 'Sao chep thanh cong',
@@ -243,6 +250,8 @@ const DICTS: Record<LangCode, I18nDict> = {
         'QQ交流8群 541137708': 'Nhom QQ 8: 541137708',
         'QQ交流7群 1063562123': 'Nhom QQ 7: 1063562123',
         'QQ交流9群 1057507086': 'Nhom QQ 9: 1057507086',
+        '加速卡': 'The Tang Toc',
+        '适用': 'Ap dung'
     },
     ko: {
         '沙土地': '모래 땅',
@@ -312,6 +321,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '{time}后成熟': '{time} 후 성숙',
         '土地状态数据异常': '토지 상태 데이터 이상',
         '浇水成功': '물 주기 성공',
+        '加速成功': '가속 성공',
         '采摘成功': '수확 성공',
         '铲除成功': '제거 성공',
         '复制成功': '복사 성공',
@@ -322,6 +332,8 @@ const DICTS: Record<LangCode, I18nDict> = {
         'QQ交流8群 541137708': 'QQ 그룹 8: 541137708',
         'QQ交流7群 1063562123': 'QQ 그룹 7: 1063562123',
         'QQ交流9群 1057507086': 'QQ 그룹 9: 1057507086',
+        '加速卡': '가속 카드',
+        '适用': '적용'
     },
     ja: {
         '沙土地': '砂の土地',
@@ -391,6 +403,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '{time}后成熟': '{time}後に成熟',
         '土地状态数据异常': '土地状態データが異常です',
         '浇水成功': '水やり成功',
+        '加速成功': '加速成功',
         '采摘成功': '収穫成功',
         '铲除成功': '除去成功',
         '复制成功': 'コピー成功',
@@ -401,6 +414,8 @@ const DICTS: Record<LangCode, I18nDict> = {
         'QQ交流8群 541137708': 'QQグループ 8: 541137708',
         'QQ交流7群 1063562123': 'QQグループ 7: 1063562123',
         'QQ交流9群 1057507086': 'QQグループ 9: 1057507086',
+        '加速卡': '加速カード',
+        '适用': '適用'
     },
 };
 

@@ -1,9 +1,10 @@
-import { _decorator, Component, director, EventTouch, Node, Sprite, SpriteFrame, Enum, tween, UITransform, UIOpacity, Vec2, Vec3, log } from 'cc';
+import { _decorator, Component, director, EventTouch, Node, resources, Sprite, SpriteFrame, Enum, tween, UITransform, UIOpacity, Vec2, Vec3, log } from 'cc';
 import { Api, LandInfo as LandInfoData, LandListItem, LandOperateParams, LandSowResponse } from '../Config/Api';
 import { t } from '../Config/I18n';
 import { Toast } from '../Common/Toast';
 import { AudioManager } from '../Manager/AudioManager';
 import { Backpack } from '../Home/Backpack';
+import { Cards } from '../Home/Cards';
 import { LandInfo } from '../Home/LandInfo';
 import { MapRoot } from '../Home/MapRoot';
 import { UiHeadbar } from '../Home/UiHeadbar';
@@ -33,8 +34,17 @@ const LAND_CLICK_CANCEL_DISTANCE = 10;
 export class Land extends Component {
     private static readonly PICKER_STORAGE_KEY = 'popup_picker_value';
     private static readonly DEFAULT_LAND_TYPE = 1;
+    private static readonly CARD_ICON_PATHS: Record<number, string> = {
+        5: 'card4/spriteFrame',
+        4: 'card4/spriteFrame',
+        3: 'card3/spriteFrame',
+        2: 'card2/spriteFrame',
+        1: 'card/spriteFrame',
+        0: 'card/spriteFrame',
+    };
     private static readonly _instances = new Set<Land>();
     private static _currentLandType = Land.DEFAULT_LAND_TYPE;
+    private static readonly iconCache = new Map<string, SpriteFrame | null>();
     private static readonly LAND_SWITCH_SQUASH = new Vec3(0.9, 1.04, 1);
     private static readonly LAND_SWITCH_BOUNCE = new Vec3(1.04, 0.98, 1);
     private static readonly LAND_NORMAL_SCALE = new Vec3(1, 1, 1);
@@ -49,6 +59,15 @@ export class Land extends Component {
 
     @property({ type: Node, tooltip: '浇水按钮节点' })
     water: Node | null = null;
+
+    @property({ type: Node, tooltip: '操作按钮父节点' })
+    action: Node | null = null;
+
+    @property({ type: Node, tooltip: '加速按钮节点' })
+    accelerate: Node | null = null;
+
+    @property({ type: Sprite, tooltip: '加速卡图片组件' })
+    accelerateCardSprite: Sprite | null = null;
 
     @property({ type: Node, tooltip: '清除按钮节点' })
     clear: Node | null = null;
@@ -118,6 +137,7 @@ export class Land extends Component {
         Land._currentLandType = nextType;
         for (const land of Land._instances) {
             land.applyLandSprite(Land._currentLandType, shouldAnimate);
+            void land.applyAccelerateCardSprite(Land._currentLandType);
         }
     }
 
@@ -135,18 +155,27 @@ export class Land extends Component {
     onLoad() {
         Land._instances.add(this);
         this.originScale.set(this.node.scale);
+        this.action = this.action ?? this.node.getChildByPath('plant/action') ?? this.node.getChildByName('action') ?? null;
+        this.water = this.water ?? this.node.getChildByPath('plant/action/water') ?? this.node.getChildByName('water') ?? null;
+        this.accelerate = this.accelerate ?? this.node.getChildByPath('plant/action/accelerate') ?? this.node.getChildByName('accelerate') ?? null;
+        this.accelerateCardSprite = this.accelerateCardSprite
+            ?? this.node.getChildByPath('plant/action/accelerate/card')?.getComponent(Sprite)
+            ?? this.accelerate?.getChildByName('card')?.getComponent(Sprite)
+            ?? null;
         this.applyState();
         if (this.landSprite) {
             this._landUT = this.landSprite.getComponent(UITransform);
         }
         if (this.selectNode) this.selectNode.active = false;
         this.applyLandSprite(Land._currentLandType, false);
+        void this.applyAccelerateCardSprite(Land._currentLandType);
         this.ensureEffectLayer();
         this.node.on(Node.EventType.TOUCH_START, this.onLandTouchStart, this);
         this.node.on(Node.EventType.TOUCH_MOVE, this.onLandTouchMove, this);
         this.node.on(Node.EventType.TOUCH_END, this.onLandTouchEnd, this);
         this.node.on(Node.EventType.TOUCH_CANCEL, this.onLandTouchEnd, this);
         this.water?.on(Node.EventType.TOUCH_END, this.onWaterClick, this);
+        this.accelerate?.on(Node.EventType.TOUCH_END, this.onAccelerateClick, this);
         this.pick?.on(Node.EventType.TOUCH_END, this.onPickClick, this);
         this.clear?.on(Node.EventType.TOUCH_END, this.onRemoveClick, this);
     }
@@ -161,6 +190,7 @@ export class Land extends Component {
         this.safeOff(this.node, Node.EventType.TOUCH_END, this.onLandTouchEnd);
         this.safeOff(this.node, Node.EventType.TOUCH_CANCEL, this.onLandTouchEnd);
         this.safeOff(this.water, Node.EventType.TOUCH_END, this.onWaterClick);
+        this.safeOff(this.accelerate, Node.EventType.TOUCH_END, this.onAccelerateClick);
         this.safeOff(this.pick, Node.EventType.TOUCH_END, this.onPickClick);
         this.safeOff(this.clear, Node.EventType.TOUCH_END, this.onRemoveClick);
         if (Land._currentSelected === this) {
@@ -194,7 +224,7 @@ export class Land extends Component {
         return (landType - 1) * 10 + landIndex;
     }
 
-    select() {
+    select(shouldSyncFocusPanel = true) {
         if (Land._currentSelected && Land._currentSelected !== this) {
             Land._currentSelected.deselect(false, false);
         }
@@ -202,7 +232,9 @@ export class Land extends Component {
         Land._currentSelected = this;
         if (this.selectNode) this.selectNode.active = true;
         this.playSelectFeedback();
-        this.updateFocusPanelByStatus();
+        if (shouldSyncFocusPanel) {
+            this.updateFocusPanelByStatus();
+        }
     }
 
     deselect(shouldHideBackpack: boolean = true, shouldNotifyFocusChange: boolean = true) {
@@ -281,8 +313,10 @@ export class Land extends Component {
             }
         }
         if (this.water) this.water.active = this.state === LandState.Mature;
+        if (this.accelerate) this.accelerate.active = this.state === LandState.Sprout || this.state === LandState.Seedling;
         if (this.clear) this.clear.active = this.state === LandState.Withered;
         if (this.pick) this.pick.active = false;
+        this.updateActionVisibility();
 
         if (isPlanted && this.treeSprite) {
             this.treeSprite.spriteFrame = this.getFrame();
@@ -298,8 +332,10 @@ export class Land extends Component {
             this.tree.setScale(1, 1, 1);
         }
         if (this.water) this.water.active = status === 1;
+        if (this.accelerate) this.accelerate.active = status === 1 || status === 2;
         if (this.clear) this.clear.active = status === 4;
         if (this.pick) this.pick.active = status === 3;
+        this.updateActionVisibility();
 
         if (!hasPlant || !this.treeSprite) {
             this.treeSprite && (this.treeSprite.spriteFrame = null);
@@ -405,6 +441,19 @@ export class Land extends Component {
     private onWaterClick(event?: EventTouch) {
         if (event) event.propagationStopped = true;
         void this.runLandOperation('water');
+    }
+
+    private onAccelerateClick(event?: EventTouch) {
+        if (event) event.propagationStopped = true;
+        this.select(false);
+        const landId = this.getRequestLandId();
+        if (!landId) {
+            console.warn('[Land] 土地ID计算失败，无法打开加速卡面板');
+            return;
+        }
+        LandInfo.instance?.hide();
+        Backpack.instance?.hide();
+        Cards.ensureInstance()?.show(landId);
     }
 
     private onLandTouchStart(event: EventTouch) {
@@ -940,6 +989,41 @@ export class Land extends Component {
             return;
         }
         target.off(eventType, callback, this);
+    }
+
+    private updateActionVisibility() {
+        if (!this.action) return;
+        const hasVisibleAction = Boolean(this.water?.active || this.accelerate?.active);
+        this.action.active = hasVisibleAction;
+    }
+
+    private async applyAccelerateCardSprite(landType: number) {
+        if (!this.accelerateCardSprite?.isValid) return;
+        const spriteFrame = await Land.loadCardIcon(landType);
+        if (!this.accelerateCardSprite?.isValid) return;
+        this.accelerateCardSprite.spriteFrame = spriteFrame;
+    }
+
+    private static async loadCardIcon(landType: number) {
+        const normalizedLandType = Number.isFinite(landType) ? landType : 0;
+        const resourcePath = Land.CARD_ICON_PATHS[normalizedLandType] ?? Land.CARD_ICON_PATHS[0];
+        const cached = Land.iconCache.get(resourcePath);
+        if (cached !== undefined) {
+            return cached;
+        }
+
+        const spriteFrame = await new Promise<SpriteFrame | null>((resolve) => {
+            resources.load(resourcePath, SpriteFrame, (error, asset) => {
+                if (error) {
+                    resolve(null);
+                    return;
+                }
+                resolve(asset ?? null);
+            });
+        });
+
+        Land.iconCache.set(resourcePath, spriteFrame);
+        return spriteFrame;
     }
 }
 

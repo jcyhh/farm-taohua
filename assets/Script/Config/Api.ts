@@ -144,6 +144,16 @@ export interface LandOperateParams {
     sow_detail_id: number;
 }
 
+export interface LandBoostCardsParams {
+    land_level?: number;
+    land_id?: number;
+}
+
+export interface LandUseBoostCardParams {
+    boost_card_id: number;
+    sow_detail_id: number;
+}
+
 export interface LandSowResponse {
     land_info?: LandInfo;
     data?: {
@@ -211,6 +221,16 @@ export class Api {
     /** GET /api/land/info/{land_id} 获取土地详情 */
     static landInfo(landId: number | string): Promise<LandDetailResponse> {
         return http.get(`/api/land/info/${landId}`);
+    }
+
+    /** GET /api/land/boost_cards 获取加速卡列表 */
+    static landBoostCards(params: LandBoostCardsParams = {}): Promise<Record<string, any>> {
+        return http.get('/api/land/boost_cards', params);
+    }
+
+    /** POST /api/land/use_boost_card 使用加速卡 */
+    static landUseBoostCard(data: LandUseBoostCardParams): Promise<LandSowResponse> {
+        return http.post('/api/land/use_boost_card', data);
     }
 
     /** POST /api/land/water 浇水 */

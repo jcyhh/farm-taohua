@@ -91,7 +91,7 @@ export class LandInfo extends Component {
         this.slideTo(this.showY);
     }
 
-    private hide() {
+    hide() {
         this.slideTo(this.hideY);
     }
 
