@@ -176,6 +176,11 @@ export interface UserProfile {
     username?: string;
     avatar?: string;
     balance?: string | number;
+    balance_fruit?: string | number;
+    balance_spring_water?: string | number;
+    balance_fairy_stone?: string | number;
+    balance_usdt?: string | number;
+    balance_xz?: string | number;
     [key: string]: any;
 }
 

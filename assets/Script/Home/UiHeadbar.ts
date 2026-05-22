@@ -17,6 +17,7 @@ export class UiHeadbar extends Component {
     private springWaterLabel: Label | null = null;
     private fairyStoneLabel: Label | null = null;
     private usdtLabel: Label | null = null;
+    private xzLabel: Label | null = null;
     private fruitIconScale = new Vec3(1, 1, 1);
 
     onLoad() {
@@ -41,6 +42,9 @@ export class UiHeadbar extends Component {
         this.usdtLabel = this.getLabelByPaths([
             'asset-001/assetUsdt/Label',
             'asset/assetUsdt/Label',
+        ]);
+        this.xzLabel = this.getLabelByPaths([
+            'asset-002/assetToken/Label',
         ]);
     }
 
@@ -117,6 +121,9 @@ export class UiHeadbar extends Component {
         }
         if (this.usdtLabel) {
             this.usdtLabel.string = formatAmount(this.userInfo?.balance_usdt);
+        }
+        if (this.xzLabel) {
+            this.xzLabel.string = formatAmount(this.userInfo?.balance_xz);
         }
     }
 
