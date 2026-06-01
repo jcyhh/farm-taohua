@@ -8,7 +8,7 @@ export interface GoodsData {
     seedId: number;
     name: string;
     dayText: string;
-    stockText: string;
+    sales: string;
     priceText: string;
     priceValue: number;
     imageUrl: string;
@@ -60,7 +60,7 @@ export class ShopGoods extends Component {
 
         if (this.nameLabel) this.nameLabel.string = data.name;
         if (this.dayLabel) this.dayLabel.string = data.dayText;
-        if (this.stockLabel) this.stockLabel.string = `${t('库存')} ${data.stockText}`;
+        if (this.stockLabel) this.stockLabel.string = `${t('库存')} ${data.sales}`;
         if (this.landLabel) this.landLabel.string = this.getLandName(data.seedId);
         if (this.buyBtnLabel) this.buyBtnLabel.string = data.priceText;
         void this.loadGoodsImage(data.imageUrl);

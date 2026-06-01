@@ -21,6 +21,7 @@ export interface SeedItem {
     seed_cycle?: number | string;
     cycle?: number | string;
     stock?: number | string;
+    sales?: number | string;
     price?: number | string;
     lifecycle?: string | number;
     [key: string]: any;
