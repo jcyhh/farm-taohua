@@ -79,6 +79,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '复制成功': '複製成功',
         '生命周期': '生命週期',
         '库存': '庫存',
+        '销量': '銷量',
         '返回': '返回',
         '灵泉水明细': '靈泉水明細',
         '桃花果明细': '桃花果明細',
@@ -119,6 +120,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '≈1灵石': '≈1 Fairy Stone',
         '生命周期': 'Lifecycle',
         '库存': 'Stock',
+        '销量': 'Sales',
         '桃花源正式开启内测阶段\n现招募体验玩家 连续签到打卡{gift_cycle}天\n送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n限量{gift_limit}席，已领 {gifted_count}':
             'Peach Blossom Spring is now in closed beta.\nWe are recruiting trial players: check in for {gift_cycle} consecutive days.\nReceive {gift_amount} trial peach trees, lifecycle {seed_cycle} days.\nLimited to {gift_limit} spots, claimed {gifted_count}.',
         '每日签到': 'Daily Check-in',
@@ -201,6 +203,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '≈1灵石': '≈1 Linh Thach',
         '生命周期': 'Vong doi',
         '库存': 'Ton kho',
+        '销量': 'Da ban',
         '桃花源正式开启内测阶段\n现招募体验玩家 连续签到打卡{gift_cycle}天\n送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n限量{gift_limit}席，已领 {gifted_count}':
             'Dao Hoa Nguyen da chinh thuc mo giai doan thu nghiem noi bo.\nDang tuyen nguoi choi trai nghiem, diem danh lien tuc {gift_cycle} ngay.\nTang {gift_amount} cay dao trai nghiem, vong doi {seed_cycle} ngay.\nGioi han {gift_limit} suat, da nhan {gifted_count}.',
         '每日签到': 'Diem danh hang ngay',
@@ -283,6 +286,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '≈1灵石': '≈영석 1개',
         '生命周期': '생명 주기',
         '库存': '재고',
+        '销量': '판매량',
         '桃花源正式开启内测阶段\n现招募体验玩家 连续签到打卡{gift_cycle}天\n送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n限量{gift_limit}席，已领 {gifted_count}':
             '도화원이 정식으로 클로즈드 베타를 시작했습니다.\n체험 유저를 모집 중이며, {gift_cycle}일 연속 출석 시\n체험용 도화나무 {gift_amount}그루와 {seed_cycle}일 생명 주기를 제공합니다.\n한정 {gift_limit}명, 이미 {gifted_count}명 수령했습니다.',
         '每日签到': '매일 출석',
@@ -365,6 +369,7 @@ const DICTS: Record<LangCode, I18nDict> = {
         '≈1灵石': '≈霊石1個',
         '生命周期': 'ライフサイクル',
         '库存': '在庫',
+        '销量': '販売数',
         '桃花源正式开启内测阶段\n现招募体验玩家 连续签到打卡{gift_cycle}天\n送体验桃花树{gift_amount}棵 生命周期{seed_cycle}天\n限量{gift_limit}席，已领 {gifted_count}':
             '桃花源は正式にクローズドベータを開始しました。\n現在、体験プレイヤーを募集しています。{gift_cycle}日連続でチェックインすると、\n体験用の桃花の木を{gift_amount}本、ライフサイクル{seed_cycle}日でプレゼントします。\n限定{gift_limit}枠、受取済み {gifted_count}。',
         '每日签到': '毎日チェックイン',
